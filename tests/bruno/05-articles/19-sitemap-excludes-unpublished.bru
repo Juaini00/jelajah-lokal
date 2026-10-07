@@ -1,0 +1,26 @@
+meta {
+  name: GET sitemap entries exclude the just-unpublished article
+  type: http
+  seq: 19
+}
+
+get {
+  url: {{baseUrl}}/api/public/sitemap-entries
+  body: none
+  auth: none
+}
+
+headers {
+  Authorization: Bearer {{apiContentToken}}
+}
+
+assert {
+  res.status: eq 200
+}
+
+tests {
+  test("unpublished article slug is absent from the dynamic sitemap", function () {
+    const slugs = res.getBody().data.map((e) => e.slug);
+    expect(slugs).to.not.include(bru.getVar("articleSlug"));
+  });
+}

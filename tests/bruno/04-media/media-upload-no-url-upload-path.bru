@@ -1,0 +1,36 @@
+meta {
+  name: POST media upload by remote URL is rejected (no URL-upload API)
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/api/admin/media
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Origin: {{apiPublicOrigin}}
+  X-CSRF-Token: {{adminCsrfToken}}
+}
+
+body:json {
+  {
+    "url": "https://example.com/some-remote-image.jpg",
+    "credit": "Attempted URL upload",
+    "sourceUrl": "https://example.com",
+    "license": "CC0"
+  }
+}
+
+assert {
+  res.status: eq 422
+}
+
+tests {
+  test("server never fetches an arbitrary remote URL on the application's behalf", function () {
+    expect([400, 415, 422]).to.include(res.getStatus());
+  });
+}

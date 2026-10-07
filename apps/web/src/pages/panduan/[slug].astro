@@ -1,0 +1,98 @@
+---
+import SiteLayout from '../../layouts/SiteLayout.astro';
+import ArticleBody from '../../components/ArticleBody.astro';
+import ContentImage from '../../components/ContentImage.astro';
+import ErrorState from '../../components/ErrorState.astro';
+import { article, ContentError } from '../../lib/server/api';
+import type { PublicArticleDetail } from '../../lib/server/contracts';
+import { displayDate, guideUrl, safeLink } from '../../lib/urls';
+
+const { slug } = Astro.params;
+let data: PublicArticleDetail | undefined;
+let status: 200 | 404 | 503 = 200;
+
+if (!slug) {
+  status = 404;
+} else {
+  try {
+    data = (await article(slug)).data;
+  } catch (error) {
+    status = error instanceof ContentError && error.status === 404 ? 404 : 503;
+  }
+}
+if (status !== 200) Astro.response.status = status;
+
+const structuredData = data ? {
+  '@context': 'https://schema.org',
+  '@type': 'Article',
+  headline: data.title,
+  description: data.metaDescription,
+  image: safeLink(data.cover.url) ? [data.cover.url] : undefined,
+  datePublished: data.publishedAt,
+  dateModified: data.updatedAt,
+  author: { '@type': 'Person', name: data.author.name },
+  publisher: { '@type': 'Organization', name: 'Jelajah Lokal' },
+} : undefined;
+const sourceUrl = data ? safeLink(data.imageSourceUrl) : undefined;
+const crumbTitle = data && data.title.length > 48 ? `${data.title.slice(0, 48)}…` : data?.title;
+---
+<SiteLayout
+  title={data ? `${data.title} — Jelajah Lokal` : 'Panduan — Jelajah Lokal'}
+  description={data?.metaDescription || 'Panduan perjalanan lokal Jelajah Lokal.'}
+  path={data ? guideUrl(data.slug) : Astro.url.pathname}
+  image={data?.cover.url}
+  imageAlt={data?.cover.alt}
+  article={Boolean(data)}
+  publishedAt={data?.publishedAt}
+  updatedAt={data?.updatedAt}
+  structuredData={structuredData}
+  noindex={status !== 200}
+>
+  {status !== 200 ? <ErrorState status={status} /> : data && (
+    <article>
+      <nav class="crumb" aria-label="Telusur">
+        <a href="/">Beranda</a><span class="sep" aria-hidden="true">→</span>
+        <a href="/panduan">Panduan</a><span class="sep" aria-hidden="true">→</span>
+        <span class="cur" aria-current="page">{crumbTitle}</span>
+      </nav>
+      <header class="art-head">
+        <div class="art-top"><span class="category">{data.category.name}</span>{data.regionLabel && <span class="sample">{data.regionLabel}</span>}</div>
+        <h1>{data.title}</h1>
+        <p class="dek">{data.excerpt}</p>
+        <div class="byline">
+          <div><span class="by-who">{data.author.name}</span><span class="by-role">Penulis &amp; penyunting</span></div>
+          <span class="by-date">{displayDate(data.publishedAt)} · {data.readingTimeMinutes} menit baca</span>
+        </div>
+      </header>
+      <figure class="hero">
+        <ContentImage cover={data.cover} eager variant="hero" />
+        <figcaption>
+          <span>{data.coverCaption}</span>
+          <span class="credit">{sourceUrl ? <>Foto: <a href={sourceUrl} rel="noopener noreferrer">{data.imageCredit}</a></> : <>Foto: {data.imageCredit}</>}</span>
+        </figcaption>
+      </figure>
+      <div class="read"><ArticleBody blocks={data.body} /></div>
+      <aside class="sources">
+        <span class="eyebrow">Sumber &amp; status</span>
+        <h3>Dari mana panduan ini berasal</h3>
+        <dl class="src-grid">
+          <dt class="src-k">Status</dt>
+          <dd class="src-v"><span class="sample">{data.informationCheckedAt ? `Diperiksa ${displayDate(data.informationCheckedAt)}` : 'Belum ada tanggal pemeriksaan'}</span></dd>
+          {data.sourceLinks.length > 0 && <>
+            <dt class="src-k">Sumber</dt>
+            <dd class="src-v"><ul>{data.sourceLinks.map(source => {
+              const link = safeLink(source.url);
+              return <li>{link ? <a href={link} rel="noopener noreferrer">{source.label}</a> : source.label}{link && <span class="url">{link}</span>}{source.accessedAt && <> · diakses {displayDate(source.accessedAt)}</>}</li>;
+            })}</ul></dd>
+          </>}
+          <dt class="src-k">Foto</dt>
+          <dd class="src-v">{data.imageCredit}{sourceUrl && <span class="url">{sourceUrl}</span>}</dd>
+          <dt class="src-k">Penulis</dt>
+          <dd class="src-v">{data.author.name}</dd>
+        </dl>
+        <p class="caution"><b>Catatan.</b> Harga, rute, dan jam operasional dapat berubah. Periksa ulang ke sumbernya sebelum dijadikan acuan perjalanan.</p>
+      </aside>
+      <nav class="back" aria-label="Kembali ke daftar"><a class="textlink" href="/panduan"><span aria-hidden="true">←</span> Kembali ke Panduan</a></nav>
+    </article>
+  )}
+</SiteLayout>

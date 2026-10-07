@@ -1,0 +1,27 @@
+meta {
+  name: GET admin authors list
+  type: http
+  seq: 9
+}
+
+get {
+  url: {{baseUrl}}/api/admin/authors
+  body: none
+  auth: none
+}
+
+headers {
+  Origin: {{apiPublicOrigin}}
+  X-CSRF-Token: {{adminCsrfToken}}
+}
+
+assert {
+  res.status: eq 200
+}
+
+tests {
+  test("includes the author just created", function () {
+    const ids = res.getBody().data.map((a) => a.documentId);
+    expect(ids).to.include(bru.getVar("authorMainId"));
+  });
+}

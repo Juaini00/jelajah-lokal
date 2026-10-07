@@ -1,0 +1,32 @@
+meta {
+  name: POST category rejects unknown request property
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/api/admin/categories
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Origin: {{apiPublicOrigin}}
+  X-CSRF-Token: {{adminCsrfToken}}
+}
+
+body:json {
+  {
+    "name": "Invalid Field Probe",
+    "slug": "invalid-field-probe-{{runNonce}}",
+    "description": "",
+    "order": 1,
+    "unexpectedProperty": true
+  }
+}
+
+assert {
+  res.status: eq 422
+  res.body.error.code: eq INVALID_REQUEST
+}

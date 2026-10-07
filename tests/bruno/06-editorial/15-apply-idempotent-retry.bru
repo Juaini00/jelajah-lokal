@@ -1,0 +1,42 @@
+meta {
+  name: POST apply retried with an identical payload is idempotent (T-14)
+  type: http
+  seq: 15
+}
+
+post {
+  url: {{baseUrl}}/api/admin/editorial/apply
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Origin: {{apiPublicOrigin}}
+  X-CSRF-Token: {{adminCsrfToken}}
+}
+
+body:json {
+  {
+    "requestId": "{{generateRequestId2}}",
+    "selectedFields": ["excerpt", "tags"],
+    "values": {
+      "excerpt": "Ringkasan hasil Editorial Assistant yang telah diperiksa dan diedit oleh editor.",
+      "tags": ["kopi", "desa", "wisata lokal"]
+    }
+  }
+}
+
+tests {
+  test("identical repeated apply returns a consistent idempotent success, no duplicate mutation", function () {
+    if (bru.getVar("generateStatus2") == 200) {
+      expect(res.getStatus()).to.equal(200);
+      const body = res.getBody();
+      expect(body.applied).to.equal(true);
+      // draftRevision must NOT have incremented again for the same request.
+      expect(body.draftRevision).to.equal(bru.getVar("editorialArticleRevision"));
+    } else {
+      expect(res.getStatus()).to.be.oneOf([404, 409]);
+    }
+  });
+}

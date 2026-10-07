@@ -1,0 +1,28 @@
+meta {
+  name: POST publish with stale revision returns 409 ARTICLE_CHANGED
+  type: http
+  seq: 10
+}
+
+post {
+  url: {{baseUrl}}/api/admin/articles/{{articleId}}/publish
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Origin: {{apiPublicOrigin}}
+  X-CSRF-Token: {{adminCsrfToken}}
+}
+
+body:json {
+  {
+    "revision": 1
+  }
+}
+
+assert {
+  res.status: eq 409
+  res.body.error.code: eq ARTICLE_CHANGED
+}

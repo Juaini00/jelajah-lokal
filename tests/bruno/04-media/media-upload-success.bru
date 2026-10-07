@@ -1,0 +1,53 @@
+meta {
+  name: POST media upload valid JPEG succeeds
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/api/admin/media
+  body: multipartForm
+  auth: none
+}
+
+headers {
+  Origin: {{apiPublicOrigin}}
+  X-CSRF-Token: {{adminCsrfToken}}
+}
+
+body:multipart-form {
+  file: @file(./fixtures/sample-cover.jpg)
+  credit: Foto oleh Bruno Test Suite
+  sourceUrl: https://example.com/bruno-fixture
+  license: CC0
+}
+
+assert {
+  res.status: eq 201
+}
+
+script:post-response {
+  if (res.getStatus() === 201) {
+    bru.setVar("mediaMainId", res.getBody().data.documentId);
+  }
+}
+
+tests {
+  test("media DTO carries real Cloudinary-derived metadata, not client-supplied dimensions", function () {
+    const data = res.getBody().data;
+    expect(data).to.include.all.keys(
+      "documentId", "url", "publicId", "assetId", "width", "height",
+      "format", "credit", "sourceUrl", "license", "createdAt"
+    );
+    expect(data.width).to.equal(640);
+    expect(data.height).to.equal(480);
+    expect(["jpg", "jpeg"]).to.include(String(data.format).toLowerCase());
+    expect(data.url).to.match(/^https:\/\//);
+  });
+
+  test("response never includes Cloudinary credentials", function () {
+    const text = JSON.stringify(res.getBody());
+    expect(text).to.not.match(/api_secret/i);
+    expect(text).to.not.match(/cloudinary_api_key/i);
+  });
+}

@@ -1,0 +1,44 @@
+meta {
+  name: POST apply with a requestId whose draft changed since generate returns 409 ARTICLE_CHANGED
+  type: http
+  seq: 11
+}
+
+post {
+  url: {{baseUrl}}/api/admin/editorial/apply
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Origin: {{apiPublicOrigin}}
+  X-CSRF-Token: {{adminCsrfToken}}
+}
+
+body:json {
+  {
+    "requestId": "{{generateRequestId1}}",
+    "selectedFields": ["excerpt"],
+    "values": {
+      "excerpt": "Usulan ringkasan yang seharusnya ditolak karena draft sudah berubah."
+    }
+  }
+}
+
+assert {
+  res.status: eq 409
+}
+
+tests {
+  test("apply never overwrites when the draft changed since generation (T-13)", function () {
+    if (bru.getVar("generateStatus1") === "200" || bru.getVar("generateStatus1") === 200) {
+      expect(res.getStatus()).to.equal(409);
+      expect(res.getBody().error.code).to.equal("ARTICLE_CHANGED");
+    } else {
+      // Generate never produced a usable request (AI_NOT_CONFIGURED); apply
+      // against a nonexistent/never-succeeded requestId must still fail safely.
+      expect(res.getStatus()).to.be.oneOf([404, 409]);
+    }
+  });
+}

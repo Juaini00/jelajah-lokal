@@ -1,0 +1,48 @@
+meta {
+  name: POST apply updates only the selected draft metadata fields
+  type: http
+  seq: 14
+}
+
+post {
+  url: {{baseUrl}}/api/admin/editorial/apply
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Origin: {{apiPublicOrigin}}
+  X-CSRF-Token: {{adminCsrfToken}}
+}
+
+body:json {
+  {
+    "requestId": "{{generateRequestId2}}",
+    "selectedFields": ["excerpt", "tags"],
+    "values": {
+      "excerpt": "Ringkasan hasil Editorial Assistant yang telah diperiksa dan diedit oleh editor.",
+      "tags": ["kopi", "desa", "wisata lokal"]
+    }
+  }
+}
+
+script:post-response {
+  if (res.getStatus() === 200) {
+    bru.setVar("editorialArticleRevision", res.getBody().draftRevision);
+  }
+}
+
+tests {
+  test("apply succeeds only when a usable generate request exists (T-12)", function () {
+    if (bru.getVar("generateStatus2") == 200) {
+      expect(res.getStatus()).to.equal(200);
+      const body = res.getBody();
+      expect(body).to.include.all.keys("requestId", "articleDocumentId", "applied", "draftRevision", "selectedFields");
+      expect(body.applied).to.equal(true);
+      expect(body.selectedFields).to.deep.equal(["excerpt", "tags"]);
+    } else {
+      expect(res.getStatus()).to.be.oneOf([404, 409]);
+    }
+  });
+}

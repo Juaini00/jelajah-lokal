@@ -1,0 +1,27 @@
+meta {
+  name: DELETE a currently published article is rejected (only unpublished deletable)
+  type: http
+  seq: 9
+}
+
+delete {
+  url: {{baseUrl}}/api/admin/articles/{{articleId}}
+  body: none
+  auth: none
+}
+
+headers {
+  Origin: {{apiPublicOrigin}}
+  X-CSRF-Token: {{adminCsrfToken}}
+}
+
+assert {
+  res.status: eq 409
+}
+
+tests {
+  test("DELETE only unpublished per contract; live article survives", function () {
+    expect(res.getStatus()).to.equal(409);
+    expect(res.getBody().error).to.exist;
+  });
+}

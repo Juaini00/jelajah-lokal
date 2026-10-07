@@ -1,0 +1,27 @@
+meta {
+  name: GET public detail still reflects the last PUBLISHED revision, not the new draft edit
+  type: http
+  seq: 16
+}
+
+get {
+  url: {{baseUrl}}/api/public/articles/{{articleSlug}}
+  body: none
+  auth: none
+}
+
+headers {
+  Authorization: Bearer {{apiContentToken}}
+}
+
+assert {
+  res.status: eq 200
+}
+
+tests {
+  test("public excerpt is unchanged by the unpublished draft edit (draft/published isolation)", function () {
+    const data = res.getBody().data;
+    expect(data.excerpt).to.equal(bru.getVar("publicArticleExcerptBeforeDraftEdit"));
+    expect(data.excerpt).to.not.include("EXCERPT DRAFT BARU");
+  });
+}

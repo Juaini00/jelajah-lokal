@@ -1,0 +1,56 @@
+meta {
+  name: POST generate metadata for an accessible draft
+  type: http
+  seq: 9
+}
+
+post {
+  url: {{baseUrl}}/api/admin/editorial/generate
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Origin: {{apiPublicOrigin}}
+  X-CSRF-Token: {{adminCsrfToken}}
+}
+
+body:json {
+  {
+    "articleDocumentId": "{{editorialArticleId}}",
+    "idempotencyKey": "{{idemKeyGenerate1}}"
+  }
+}
+
+script:post-response {
+  const status = res.getStatus();
+  bru.setVar("generateStatus1", status);
+  if (status === 200) {
+    const body = res.getBody();
+    bru.setVar("generateRequestId1", body.requestId);
+    bru.setVar("generateFingerprint1", body.revisionFingerprint);
+    bru.setVar("quotaUsedAfterGenerate1", body.quota.used);
+  }
+}
+
+tests {
+  test("either a real deterministic result or an honest AI_NOT_CONFIGURED, never a fake 200", function () {
+    const status = res.getStatus();
+    expect([200, 503]).to.include(status);
+    const body = res.getBody();
+    if (status === 200) {
+      expect(body).to.include.all.keys("requestId", "articleDocumentId", "revisionFingerprint", "result", "cacheHit", "quota");
+      expect(body.result).to.include.all.keys("excerpt", "metaDescription", "suggestedTags");
+      expect(body.result.suggestedTags).to.be.an("array");
+      expect(body.quota.used).to.be.at.most(body.quota.limit);
+      expect(body.articleDocumentId).to.equal(bru.getVar("editorialArticleId"));
+      // NOTE (assumption, pending BackendProduct3's app/testing.py fixture doc):
+      // when run against the deterministic harness environment, assert the
+      // exact literal excerpt/metaDescription/suggestedTags fixture values
+      // here once documented, instead of only structural checks.
+    } else {
+      expect(body.error.code).to.equal("AI_NOT_CONFIGURED");
+    }
+  });
+}

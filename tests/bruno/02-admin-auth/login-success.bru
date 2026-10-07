@@ -1,0 +1,53 @@
+meta {
+  name: POST admin login success
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/api/admin/login
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Origin: {{apiPublicOrigin}}
+}
+
+body:json {
+  {
+    "username": "{{adminUsername}}",
+    "password": "{{adminPassword}}"
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.data.principal.username: eq {{adminUsername}}
+  res.body.data.principal.role: eq admin
+}
+
+script:post-response {
+  if (res.getStatus() === 200) {
+    const data = res.getBody().data;
+    bru.setVar("adminCsrfToken", data.csrfToken);
+    bru.setVar("adminPrincipalId", data.principal.documentId);
+  }
+}
+
+tests {
+  test("sets an HttpOnly session cookie, not a readable token", function () {
+    const setCookie = res.getHeader("set-cookie");
+    expect(setCookie).to.exist;
+    const cookieStr = Array.isArray(setCookie) ? setCookie.join(";") : setCookie;
+    expect(cookieStr.toLowerCase()).to.include("httponly");
+  });
+
+  test("response body never contains the session secret itself", function () {
+    const body = res.getBody();
+    expect(body.data).to.include.all.keys("principal", "csrfToken");
+    expect(body.data.principal).to.include.all.keys("documentId", "username", "role");
+    expect(JSON.stringify(body)).to.not.match(/password/i);
+  });
+}

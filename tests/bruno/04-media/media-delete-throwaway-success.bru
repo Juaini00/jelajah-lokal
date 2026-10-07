@@ -1,0 +1,21 @@
+meta {
+  name: DELETE unreferenced throwaway media succeeds
+  type: http
+  seq: 6
+}
+
+delete {
+  url: {{baseUrl}}/api/admin/media/{{mediaThrowawayId}}
+  body: none
+  auth: none
+}
+
+headers {
+  Origin: {{apiPublicOrigin}}
+  X-CSRF-Token: {{adminCsrfToken}}
+}
+
+assert {
+  res.status: eq 200
+  res.body.data.deleted: eq true
+}

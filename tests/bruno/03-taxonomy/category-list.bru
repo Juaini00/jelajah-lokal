@@ -1,0 +1,27 @@
+meta {
+  name: GET admin categories list
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{baseUrl}}/api/admin/categories
+  body: none
+  auth: none
+}
+
+headers {
+  Origin: {{apiPublicOrigin}}
+  X-CSRF-Token: {{adminCsrfToken}}
+}
+
+assert {
+  res.status: eq 200
+}
+
+tests {
+  test("includes the category just created", function () {
+    const ids = res.getBody().data.map((c) => c.documentId);
+    expect(ids).to.include(bru.getVar("categoryMainId"));
+  });
+}

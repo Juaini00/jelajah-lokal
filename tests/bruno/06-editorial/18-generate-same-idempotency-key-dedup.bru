@@ -1,0 +1,37 @@
+meta {
+  name: POST generate retried with the SAME idempotencyKey never double-generates (T-09)
+  type: http
+  seq: 18
+}
+
+post {
+  url: {{baseUrl}}/api/admin/editorial/generate
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Origin: {{apiPublicOrigin}}
+  X-CSRF-Token: {{adminCsrfToken}}
+}
+
+body:json {
+  {
+    "articleDocumentId": "{{editorialArticleId}}",
+    "idempotencyKey": "{{idemKeyGenerate2}}"
+  }
+}
+
+tests {
+  test("same idempotencyKey returns the same requestId, not a fresh generation", function () {
+    if (bru.getVar("generateStatus2") == 200) {
+      expect(res.getStatus()).to.equal(200);
+      const body = res.getBody();
+      expect(body.requestId).to.equal(bru.getVar("generateRequestId2"));
+      expect(body.quota.used).to.equal(bru.getVar("quotaUsedAfterGenerate2"));
+    } else {
+      expect(res.getStatus()).to.equal(503);
+    }
+  });
+}

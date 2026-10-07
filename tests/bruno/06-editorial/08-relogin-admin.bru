@@ -1,0 +1,33 @@
+meta {
+  name: Re-login as admin (restore session after ownership probe)
+  type: http
+  seq: 8
+}
+
+post {
+  url: {{baseUrl}}/api/admin/login
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Origin: {{apiPublicOrigin}}
+}
+
+body:json {
+  {
+    "username": "{{adminUsername}}",
+    "password": "{{adminPassword}}"
+  }
+}
+
+assert {
+  res.status: eq 200
+}
+
+script:post-response {
+  if (res.getStatus() === 200) {
+    bru.setVar("adminCsrfToken", res.getBody().data.csrfToken);
+  }
+}

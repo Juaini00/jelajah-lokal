@@ -1,0 +1,35 @@
+meta {
+  name: PATCH draft with stale revision returns 409 ARTICLE_CHANGED
+  type: http
+  seq: 5
+}
+
+patch {
+  url: {{baseUrl}}/api/admin/articles/{{articleId}}
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Origin: {{apiPublicOrigin}}
+  X-CSRF-Token: {{adminCsrfToken}}
+}
+
+body:json {
+  {
+    "revision": 999,
+    "title": "Mencoba menimpa dengan revision basi"
+  }
+}
+
+assert {
+  res.status: eq 409
+  res.body.error.code: eq ARTICLE_CHANGED
+}
+
+tests {
+  test("stale revision write never applies", function () {
+    expect(res.getStatus()).to.equal(409);
+  });
+}

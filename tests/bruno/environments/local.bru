@@ -1,0 +1,23 @@
+vars {
+  baseUrl: http://127.0.0.1:8000
+  publicWebUrl: http://127.0.0.1:4321
+  apiPublicOrigin: http://127.0.0.1:8000
+}
+
+vars:secret [
+  apiContentToken,
+  mcpApiKey,
+  adminUsername,
+  adminPassword,
+  editorUsername,
+  editorPassword
+]
+
+vars {
+  apiContentToken: {{process.env.API_CONTENT_TOKEN}}
+  mcpApiKey: {{process.env.MCP_API_KEY}}
+  adminUsername: {{process.env.JELAJAH_TEST_ADMIN_USERNAME}}
+  adminPassword: {{process.env.JELAJAH_TEST_ADMIN_PASSWORD}}
+  editorUsername: {{process.env.JELAJAH_TEST_EDITOR_USERNAME}}
+  editorPassword: {{process.env.JELAJAH_TEST_EDITOR_PASSWORD}}
+}

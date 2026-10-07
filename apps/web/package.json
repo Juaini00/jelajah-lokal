@@ -1,0 +1,28 @@
+{
+  "name": "apps-web",
+  "type": "module",
+  "version": "0.0.1",
+  "engines": {
+    "node": "24.19.0"
+  },
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "check": "astro check",
+    "preview": "astro preview",
+    "astro": "astro"
+  },
+  "dependencies": {
+    "@astrojs/node": "11.1.7",
+    "@fontsource/manrope": "5.3.0",
+    "@fontsource/newsreader": "5.3.0",
+    "astro": "7.3.6"
+  },
+  "allowScripts": {
+    "esbuild": true
+  },
+  "devDependencies": {
+    "@astrojs/check": "0.9.10",
+    "typescript": "5.9.3"
+  }
+}

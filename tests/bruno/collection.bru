@@ -1,0 +1,36 @@
+script:pre-request {
+  // Shared helper: a fresh valid UUIDv4 per named purpose, stable across the
+  // run (idempotencyKey is a strict UUID per contracts/implementation.md).
+  function uuid4() {
+    return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function (c) {
+      const r = (Math.random() * 16) | 0;
+      const v = c === "x" ? r : (r & 0x3) | 0x8;
+      return v.toString(16);
+    });
+  }
+  if (!bru.getVar("runNonce")) {
+    bru.setVar("runNonce", Date.now().toString(36) + Math.random().toString(36).slice(2, 10));
+  }
+  const idemNames = [
+    "idemKeyNotFound",
+    "idemKeyExtraField",
+    "idemKeyEditorNoAccess",
+    "idemKeyGenerate1",
+    "idemKeyGenerate2",
+    "idemKeyCacheProbe",
+  ];
+  idemNames.forEach(function (name) {
+    if (!bru.getVar(name)) {
+      bru.setVar(name, uuid4());
+    }
+  });
+}
+tests {
+  test("response has no stray HTML error page", function () {
+    const ct = res.getHeader("content-type") || "";
+    const isMcp = req.getUrl().includes("/mcp");
+    if (res.getStatus() !== 204 && !isMcp) {
+      expect(ct).to.include("application/json");
+    }
+  });
+}

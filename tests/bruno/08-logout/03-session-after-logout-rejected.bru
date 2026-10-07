@@ -1,0 +1,22 @@
+meta {
+  name: GET admin session after logout is rejected (server-side revocation, not just cookie clearing)
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{baseUrl}}/api/admin/session
+  body: none
+  auth: none
+}
+
+assert {
+  res.status: eq 401
+  res.body.error.code: eq AUTH_REQUIRED
+}
+
+tests {
+  test("session is revoked server-side, so even a retained cookie value is unusable", function () {
+    expect(res.getStatus()).to.equal(401);
+  });
+}

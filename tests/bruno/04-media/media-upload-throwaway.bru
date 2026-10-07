@@ -1,0 +1,33 @@
+meta {
+  name: POST media upload throwaway (unreferenced) asset
+  type: http
+  seq: 5
+}
+
+post {
+  url: {{baseUrl}}/api/admin/media
+  body: multipartForm
+  auth: none
+}
+
+headers {
+  Origin: {{apiPublicOrigin}}
+  X-CSRF-Token: {{adminCsrfToken}}
+}
+
+body:multipart-form {
+  file: @file(./fixtures/sample-cover.jpg)
+  credit: Bruno Throwaway Asset
+  sourceUrl: https://example.com/bruno-fixture-throwaway
+  license: CC0
+}
+
+assert {
+  res.status: eq 201
+}
+
+script:post-response {
+  if (res.getStatus() === 201) {
+    bru.setVar("mediaThrowawayId", res.getBody().data.documentId);
+  }
+}

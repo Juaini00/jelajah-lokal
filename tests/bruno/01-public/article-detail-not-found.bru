@@ -1,0 +1,20 @@
+meta {
+  name: GET public article detail for nonexistent slug
+  type: http
+  seq: 8
+}
+
+get {
+  url: {{baseUrl}}/api/public/articles/this-slug-does-not-exist-at-all
+  body: none
+  auth: none
+}
+
+headers {
+  Authorization: Bearer {{apiContentToken}}
+}
+
+assert {
+  res.status: eq 404
+  res.body.error.code: eq ARTICLE_NOT_FOUND
+}

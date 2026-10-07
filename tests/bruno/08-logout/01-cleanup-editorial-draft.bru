@@ -1,0 +1,21 @@
+meta {
+  name: DELETE the editorial test draft (cleanup; it was never published)
+  type: http
+  seq: 1
+}
+
+delete {
+  url: {{baseUrl}}/api/admin/articles/{{editorialArticleId}}
+  body: none
+  auth: none
+}
+
+headers {
+  Origin: {{apiPublicOrigin}}
+  X-CSRF-Token: {{adminCsrfToken}}
+}
+
+assert {
+  res.status: eq 200
+  res.body.data.deleted: eq true
+}

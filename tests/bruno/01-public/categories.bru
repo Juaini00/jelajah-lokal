@@ -1,0 +1,36 @@
+meta {
+  name: GET public categories
+  type: http
+  seq: 6
+}
+
+get {
+  url: {{baseUrl}}/api/public/categories
+  body: none
+  auth: none
+}
+
+headers {
+  Authorization: Bearer {{apiContentToken}}
+}
+
+assert {
+  res.status: eq 200
+}
+
+script:post-response {
+  if (res.getStatus() === 200 && res.getBody().data.length > 0) {
+    bru.setVar("knownPublicCategorySlug", res.getBody().data[0].slug);
+  }
+}
+
+tests {
+  test("categories expose only public-safe fields", function () {
+    const data = res.getBody().data;
+    expect(data).to.be.an("array");
+    for (const category of data) {
+      expect(category).to.include.all.keys("name", "slug", "description");
+      expect(category).to.not.have.any.keys("documentId", "order");
+    }
+  });
+}

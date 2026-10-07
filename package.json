@@ -1,0 +1,19 @@
+{
+  "name": "jelajah-lokal",
+  "private": true,
+  "packageManager": "pnpm@10.33.4",
+  "engines": {
+    "node": "24.19.0"
+  },
+  "scripts": {
+    "dev:web": "pnpm --filter apps-web dev --host 127.0.0.1",
+    "build": "pnpm -r build",
+    "check": "pnpm -r check",
+    "api:acceptance": "cd tests/bruno && bru run --env local"
+  },
+  "devDependencies": {
+    "@usebruno/cli": "4.0.0",
+    "openapi-typescript": "7.13.0",
+    "typescript": "5.9.3"
+  }
+}

@@ -1,0 +1,43 @@
+meta {
+  name: GET editorial usage/quota/busy state
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/api/admin/editorial/usage
+  body: none
+  auth: none
+}
+
+headers {
+  Origin: {{apiPublicOrigin}}
+  X-CSRF-Token: {{adminCsrfToken}}
+}
+
+assert {
+  res.status: eq 200
+  res.body.provider: eq gemini
+}
+
+script:post-response {
+  if (res.getStatus() === 200) {
+    bru.setVar("quotaUsedBefore", res.getBody().used);
+  }
+}
+
+tests {
+  test("usage shape matches contract and never exceeds the daily limit", function () {
+    const body = res.getBody();
+    expect(body).to.include.all.keys("provider", "enabled", "used", "limit", "remaining", "resetsAt", "busy");
+    expect(body.limit).to.equal(20);
+    expect(body.used).to.be.at.most(body.limit);
+    expect(body.remaining).to.equal(body.limit - body.used);
+    expect(typeof body.busy).to.equal("boolean");
+  });
+
+  test("never exposes API key or billing details", function () {
+    const text = JSON.stringify(res.getBody());
+    expect(text).to.not.match(/api[_-]?key/i);
+  });
+}

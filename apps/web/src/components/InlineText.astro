@@ -1,0 +1,11 @@
+---
+import { safeLink } from '../lib/urls';
+import type { Inline } from '../lib/server/contracts';
+interface Props { nodes: Inline[]; }
+const nodes = Array.isArray(Astro.props.nodes) ? Astro.props.nodes : [];
+---
+{nodes.map(node => node?.type === 'text' && typeof node.text === 'string' ? (
+  node.bold && node.italic ? <strong><em>{node.text}</em></strong> : node.bold ? <strong>{node.text}</strong> : node.italic ? <em>{node.text}</em> : node.text
+) : node?.type === 'link' && Array.isArray(node.children) ? (
+  safeLink(node.url) ? <a href={safeLink(node.url)} rel="noopener noreferrer">{node.children.map(child => child?.type === 'text' && typeof child.text === 'string' ? (child.bold && child.italic ? <strong><em>{child.text}</em></strong> : child.bold ? <strong>{child.text}</strong> : child.italic ? <em>{child.text}</em> : child.text) : null)}</a> : <>{node.children.map(child => child?.type === 'text' && typeof child.text === 'string' ? child.text : null)}</>
+) : null)}

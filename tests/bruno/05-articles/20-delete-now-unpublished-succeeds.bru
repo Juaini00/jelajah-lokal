@@ -1,0 +1,27 @@
+meta {
+  name: DELETE a now-unpublished article (previously had publish history) succeeds
+  type: http
+  seq: 20
+}
+
+delete {
+  url: {{baseUrl}}/api/admin/articles/{{articleId}}
+  body: none
+  auth: none
+}
+
+headers {
+  Origin: {{apiPublicOrigin}}
+  X-CSRF-Token: {{adminCsrfToken}}
+}
+
+assert {
+  res.status: eq 200
+  res.body.data.deleted: eq true
+}
+
+tests {
+  test("article is currently unpublished (from step 17's unpublish), so delete is allowed", function () {
+    expect(res.getBody().data.deleted).to.equal(true);
+  });
+}

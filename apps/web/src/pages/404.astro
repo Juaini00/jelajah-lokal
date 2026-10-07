@@ -1,0 +1,8 @@
+---
+import SiteLayout from '../layouts/SiteLayout.astro';
+import ErrorState from '../components/ErrorState.astro';
+Astro.response.status = 404;
+---
+<SiteLayout title="Halaman tidak ditemukan — Jelajah Lokal" description="Halaman yang kamu tuju tidak tersedia." path={Astro.url.pathname} noindex>
+  <ErrorState status={404} retryUrl="/panduan" />
+</SiteLayout>

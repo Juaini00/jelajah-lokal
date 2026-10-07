@@ -1,0 +1,16 @@
+---
+import ContentImage from './ContentImage.astro';
+import { displayDate, guideUrl } from '../lib/urls';
+import type { PublicArticleCard } from '../lib/server/contracts';
+interface Props { article: PublicArticleCard; }
+const { article } = Astro.props;
+---
+<article class="card">
+  <a href={guideUrl(article.slug)}>
+    <ContentImage cover={article.cover} />
+    <span class="category">{article.category.name}</span>
+    <h3>{article.title}</h3>
+    <p>{article.excerpt}</p>
+  </a>
+  <div class="meta"><time datetime={article.publishedAt}>{displayDate(article.publishedAt)}</time><span aria-hidden="true">·</span><span>{article.readingTimeMinutes} menit baca</span></div>
+</article>

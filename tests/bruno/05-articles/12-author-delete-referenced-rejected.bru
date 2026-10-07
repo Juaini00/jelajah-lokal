@@ -1,0 +1,26 @@
+meta {
+  name: DELETE author referenced by article is rejected 409
+  type: http
+  seq: 12
+}
+
+delete {
+  url: {{baseUrl}}/api/admin/authors/{{authorMainId}}
+  body: none
+  auth: none
+}
+
+headers {
+  Origin: {{apiPublicOrigin}}
+  X-CSRF-Token: {{adminCsrfToken}}
+}
+
+assert {
+  res.status: eq 409
+}
+
+tests {
+  test("referenced author cannot be deleted without reassignment", function () {
+    expect(res.getStatus()).to.equal(409);
+  });
+}

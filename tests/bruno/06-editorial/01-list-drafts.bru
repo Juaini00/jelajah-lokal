@@ -1,0 +1,31 @@
+meta {
+  name: GET editorial accessible drafts (max 50)
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/admin/editorial/articles
+  body: none
+  auth: none
+}
+
+headers {
+  Origin: {{apiPublicOrigin}}
+  X-CSRF-Token: {{adminCsrfToken}}
+}
+
+assert {
+  res.status: eq 200
+}
+
+tests {
+  test("returns at most 50 accessible drafts with title + documentId only", function () {
+    const data = res.getBody().data;
+    expect(data).to.be.an("array");
+    expect(data.length).to.be.at.most(50);
+    for (const item of data) {
+      expect(item).to.include.all.keys("documentId", "title");
+    }
+  });
+}

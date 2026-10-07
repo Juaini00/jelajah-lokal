@@ -1,0 +1,34 @@
+meta {
+  name: POST apply with an unknown requestId is rejected
+  type: http
+  seq: 17
+}
+
+post {
+  url: {{baseUrl}}/api/admin/editorial/apply
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Origin: {{apiPublicOrigin}}
+  X-CSRF-Token: {{adminCsrfToken}}
+}
+
+body:json {
+  {
+    "requestId": "00000000-0000-0000-0000-000000000000",
+    "selectedFields": ["excerpt"],
+    "values": {
+      "excerpt": "Usulan ini tidak seharusnya pernah diterapkan karena requestId yang dipakai tidak pernah ada."
+    }
+  }
+}
+
+tests {
+  test("nonexistent/never-succeeded request is rejected, not silently accepted", function () {
+    expect([404, 409]).to.include(res.getStatus());
+    expect(res.getBody().error).to.exist;
+  });
+}

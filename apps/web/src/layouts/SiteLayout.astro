@@ -1,0 +1,68 @@
+---
+import '@fontsource/manrope/latin-400.css';
+import '@fontsource/manrope/latin-500.css';
+import '@fontsource/manrope/latin-600.css';
+import '@fontsource/manrope/latin-700.css';
+import '@fontsource/manrope/latin-800.css';
+import '@fontsource/newsreader/latin-400.css';
+import '@fontsource/newsreader/latin-500.css';
+import '@fontsource/newsreader/latin-400-italic.css';
+import '../styles/global.css';
+import { canonical, indexable, jsonLd } from '../lib/server/seo';
+import { safeImage } from '../lib/urls';
+interface Props {
+  title: string; description: string; path?: string; image?: string;
+  imageAlt?: string; article?: boolean; publishedAt?: string; updatedAt?: string;
+  structuredData?: unknown; noindex?: boolean;
+}
+const { title, description, path = Astro.url.pathname, image, imageAlt, article = false, publishedAt, updatedAt, structuredData, noindex = false } = Astro.props;
+const url = canonical(path);
+const ogImage = safeImage(image);
+const robots = noindex || !indexable() ? 'noindex, nofollow' : 'index, follow';
+const active = Astro.url.pathname.startsWith('/panduan') ? 'panduan' : Astro.url.pathname === '/tentang' ? 'tentang' : '';
+---
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <meta name="robots" content={robots} />
+    <link rel="canonical" href={url} />
+    <meta property="og:locale" content="id_ID" />
+    <meta property="og:site_name" content="Jelajah Lokal" />
+    <meta property="og:type" content={article ? 'article' : 'website'} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={url} />
+    <meta name="twitter:card" content={ogImage ? 'summary_large_image' : 'summary'} />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    {ogImage && <><meta property="og:image" content={ogImage} /><meta property="og:image:alt" content={imageAlt || ''} /><meta name="twitter:image" content={ogImage} /><meta name="twitter:image:alt" content={imageAlt || ''} /></>}
+    {publishedAt && <meta property="article:published_time" content={publishedAt} />}
+    {updatedAt && <meta property="article:modified_time" content={updatedAt} />}
+    {structuredData && <script type="application/ld+json" set:html={jsonLd(structuredData)} />}
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Langsung ke isi</a>
+    <div class="wrap">
+      <header class="header">
+        <a href="/" class="brand" aria-label="Jelajah Lokal — Beranda">jelajah<span>lokal</span><i class="brand-dot" aria-hidden="true"></i></a>
+        <nav class="nav" aria-label="Navigasi utama">
+          <a href="/panduan" class:list={{ active: active === 'panduan' }} aria-current={active === 'panduan' ? 'page' : undefined}>Panduan</a>
+          <a href="/tentang" class:list={{ active: active === 'tentang' }} aria-current={active === 'tentang' ? 'page' : undefined}>Tentang</a>
+        </nav>
+      </header>
+      <main id="main" tabindex="-1"><slot /></main>
+      <footer class="footer">
+        <div class="footer-top">
+          <div><a href="/" class="brand">jelajah<span>lokal</span><i class="brand-dot" aria-hidden="true"></i></a><p>Catatan perjalanan, rasa, dan budaya.<br />Untuk mengenal yang dekat, lebih dalam.</p></div>
+          <nav class="nav" aria-label="Navigasi footer"><a href="/panduan">Panduan</a><a href="/tentang">Tentang</a></nav>
+        </div>
+        <div class="footer-bottom"><span>© {new Date().getUTCFullYear()} Jelajah Lokal · Proyek portfolio, bukan layanan wisata.</span><a href="/tentang#fotografi">Kredit foto tercantum pada setiap panduan</a></div>
+      </footer>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,20 @@
+meta {
+  name: GET public detail 404s immediately after unpublish
+  type: http
+  seq: 18
+}
+
+get {
+  url: {{baseUrl}}/api/public/articles/{{articleSlug}}
+  body: none
+  auth: none
+}
+
+headers {
+  Authorization: Bearer {{apiContentToken}}
+}
+
+assert {
+  res.status: eq 404
+  res.body.error.code: eq ARTICLE_NOT_FOUND
+}

@@ -1,0 +1,44 @@
+meta {
+  name: POST generate again against the current draft (fresh fingerprint for apply flow)
+  type: http
+  seq: 12
+}
+
+post {
+  url: {{baseUrl}}/api/admin/editorial/generate
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Origin: {{apiPublicOrigin}}
+  X-CSRF-Token: {{adminCsrfToken}}
+}
+
+body:json {
+  {
+    "articleDocumentId": "{{editorialArticleId}}",
+    "idempotencyKey": "{{idemKeyGenerate2}}"
+  }
+}
+
+script:post-response {
+  const status = res.getStatus();
+  bru.setVar("generateStatus2", status);
+  if (status === 200) {
+    const body = res.getBody();
+    bru.setVar("generateRequestId2", body.requestId);
+    bru.setVar("quotaUsedAfterGenerate2", body.quota.used);
+  }
+}
+
+tests {
+  test("second generate call is a fresh cache miss against the mutated draft (T-11)", function () {
+    const status = res.getStatus();
+    expect([200, 503]).to.include(status);
+    if (status === 200) {
+      expect(res.getBody().cacheHit).to.equal(false);
+    }
+  });
+}

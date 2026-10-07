@@ -1,0 +1,13 @@
+.env
+.env.*
+!.env.example
+.venv/
+node_modules/
+dist/
+.astro/
+__pycache__/
+.pytest_cache/
+*.pyc
+.private/
+reports/private/
+.DS_Store

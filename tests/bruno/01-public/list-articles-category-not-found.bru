@@ -1,0 +1,24 @@
+meta {
+  name: GET public articles with unknown category slug
+  type: http
+  seq: 5
+}
+
+get {
+  url: {{baseUrl}}/api/public/articles?category=does-not-exist-slug
+  body: none
+  auth: none
+}
+
+headers {
+  Authorization: Bearer {{apiContentToken}}
+}
+
+params:query {
+  category: does-not-exist-slug
+}
+
+assert {
+  res.status: eq 404
+  res.body.error.code: eq CATEGORY_NOT_FOUND
+}

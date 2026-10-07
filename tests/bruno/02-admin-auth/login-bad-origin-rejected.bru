@@ -1,0 +1,35 @@
+meta {
+  name: POST admin login rejects mismatched Origin
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{baseUrl}}/api/admin/login
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Origin: https://evil-attacker.example
+}
+
+body:json {
+  {
+    "username": "{{adminUsername}}",
+    "password": "{{adminPassword}}"
+  }
+}
+
+assert {
+  res.status: eq 403
+}
+
+tests {
+  test("cross-origin login attempt is rejected before auth check", function () {
+    expect([401, 403]).to.include(res.getStatus());
+    const setCookie = res.getHeader("set-cookie");
+    expect(setCookie).to.be.undefined;
+  });
+}

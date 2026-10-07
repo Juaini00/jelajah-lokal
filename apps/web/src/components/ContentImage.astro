@@ -1,0 +1,38 @@
+---
+import { safeImage } from '../lib/urls';
+import type { Cover } from '../lib/server/contracts';
+interface Props { cover: Cover; eager?: boolean; variant?: 'card' | 'featured' | 'hero' | 'body' | 'about'; }
+const { cover, eager = false, variant = 'card' } = Astro.props;
+const url = safeImage(cover.url);
+const widths = [360, 640, 960, 1280, 1920].filter(width => width <= cover.width);
+if (!widths.includes(cover.width) && cover.width < 1920) widths.push(cover.width);
+const transformed = (width: number) => {
+  if (!url || !url.includes('/image/upload/')) return url;
+  const image = new URL(url);
+  image.pathname = image.pathname.replace('/image/upload/', `/image/upload/f_auto,q_auto,c_limit,w_${width}/`);
+  return image.href;
+};
+const srcset = url?.includes('/image/upload/') ? widths.map(width => `${transformed(width)} ${width}w`).join(', ') : undefined;
+const sizes = variant === 'card' ? '(max-width: 600px) calc(100vw - 44px), (max-width: 900px) calc((100vw - 96px) / 2), (max-width: 1312px) calc((100vw - 128px) / 3), 395px' : variant === 'featured' ? '(max-width: 600px) calc(100vw - 44px), (max-width: 900px) 55vw, 772px' : variant === 'about' ? '(max-width: 600px) calc(100vw - 44px), (max-width: 1312px) calc(100vw - 64px), 1248px' : '(max-width: 600px) calc(100vw - 44px), (max-width: 1024px) calc(100vw - 64px), 960px';
+---
+<div class:list={['media', `media-${variant}`, { 'media-invalid': !url }]}>
+  <div class="media-fallback" aria-hidden={url ? 'true' : undefined}>
+    <span class="nf-label">Foto belum tersedia</span>
+    <span class="nf-sub">Gambar belum dapat dimuat; panduan tetap dapat dibaca.</span>
+  </div>
+  {url && <img src={transformed(Math.min(cover.width, variant === 'card' ? 960 : 1280))} srcset={srcset} sizes={sizes} width={cover.width} height={cover.height} alt={cover.alt} loading={eager ? 'eager' : 'lazy'} fetchpriority={eager ? 'high' : 'auto'} decoding="async" />}
+</div>
+<script>
+  // Progressive enhancement only: native alt text and the reserved fallback
+  // surface remain available when scripting is disabled.
+  for (const image of document.querySelectorAll<HTMLImageElement>('.media img')) {
+    const failed = () => {
+      image.hidden = true;
+      image.parentElement?.classList.add('media-invalid');
+      const fallback = image.parentElement?.querySelector('.media-fallback');
+      fallback?.removeAttribute('aria-hidden');
+    };
+    image.addEventListener('error', failed, { once: true });
+    if (image.complete && image.naturalWidth === 0) failed();
+  }
+</script>

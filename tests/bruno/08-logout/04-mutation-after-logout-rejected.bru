@@ -1,0 +1,30 @@
+meta {
+  name: POST a mutation after logout is rejected
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{baseUrl}}/api/admin/categories
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Origin: {{apiPublicOrigin}}
+  X-CSRF-Token: {{adminCsrfToken}}
+}
+
+body:json {
+  {
+    "name": "Should Never Exist",
+    "slug": "should-never-exist-{{runNonce}}",
+    "description": "",
+    "order": 1
+  }
+}
+
+assert {
+  res.status: eq 401
+}

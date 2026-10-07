@@ -1,0 +1,46 @@
+meta {
+  name: POST /mcp tools/list exposes exactly the five allowed tools
+  type: http
+  seq: 5
+}
+
+post {
+  url: {{baseUrl}}/mcp
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Accept: application/json, text/event-stream
+  X-MCP-API-Key: {{mcpApiKey}}
+  Mcp-Session-Id: {{mcpSessionId}}
+}
+
+body:json {
+  {
+    "jsonrpc": "2.0",
+    "id": 2,
+    "method": "tools/list",
+    "params": {}
+  }
+}
+
+assert {
+  res.status: eq 200
+}
+
+tests {
+  test("no publish/unpublish/delete/env/SQL/file tool is ever exposed", function () {
+    const raw = res.getBody();
+    const text = typeof raw === "string" ? raw : JSON.stringify(raw);
+    const names = (text.match(/"name":\s*"([a-zA-Z_]+)"/g) || []).map((m) => m.split(":")[1].trim().replace(/"/g, ""));
+    const allowed = ["list_drafts", "read_draft", "generate_metadata", "apply_metadata", "read_usage"];
+    for (const name of names) {
+      expect(allowed).to.include(name);
+    }
+    expect(text).to.not.match(/publish/i);
+    expect(text).to.not.match(/delete/i);
+    expect(text.toLowerCase()).to.not.include("sql");
+  });
+}

@@ -1,0 +1,1 @@
+this is not an image, just plain text used to test invalid media upload rejection

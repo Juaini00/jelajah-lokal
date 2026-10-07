@@ -1,0 +1,21 @@
+meta {
+  name: POST admin logout revokes the session
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/api/admin/logout
+  body: none
+  auth: none
+}
+
+headers {
+  Origin: {{apiPublicOrigin}}
+  X-CSRF-Token: {{adminCsrfToken}}
+}
+
+assert {
+  res.status: eq 200
+  res.body.data.loggedOut: eq true
+}

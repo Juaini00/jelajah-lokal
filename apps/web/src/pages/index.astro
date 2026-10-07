@@ -1,0 +1,28 @@
+---
+import SiteLayout from '../layouts/SiteLayout.astro';
+import ArticleCard from '../components/ArticleCard.astro';
+import ContentImage from '../components/ContentImage.astro';
+import ErrorState from '../components/ErrorState.astro';
+import { articles, categories } from '../lib/server/api';
+import type { PublicArticleCard, Category } from '../lib/server/contracts';
+import { guideUrl } from '../lib/urls';
+let featured: PublicArticleCard | undefined;
+let latest: PublicArticleCard[] = [];
+let categoryList: Category[] = [];
+let failed = false;
+try {
+  const [featuredResponse, latestResponse, categoryResponse] = await Promise.all([articles({ featured: true, pageSize: 1 }), articles({ pageSize: 7 }), categories()]);
+  featured = featuredResponse.data[0] || latestResponse.data[0];
+  latest = latestResponse.data.filter(item => item.documentId !== featured?.documentId).slice(0, 6);
+  categoryList = categoryResponse.data;
+} catch { failed = true; Astro.response.status = 503; }
+---
+<SiteLayout title="Jelajah Lokal — Catatan perjalanan, rasa, dan budaya" description="Panduan lokal berbahasa Indonesia untuk perjalanan yang lebih dekat. Temukan cerita tentang tempat, rasa, dan budaya dengan pendekatan editorial yang terbuka." path="/" image={featured?.cover.url} imageAlt={featured?.cover.alt} noindex={failed}>
+  {failed ? <ErrorState status={503} /> : <>
+    <section class="home-hero"><div><div class="hero-eyebrow"><span class="eyebrow">Catatan perjalanan lokal</span><span class="sample">Edisi ilustratif · Indonesia</span></div><h1>Tak perlu jauh<br />untuk menemukan <em>cerita</em>.</h1></div><div class="hero-aside"><div><p>Panduan lokal untuk perjalanan yang lebih dekat. Tempat, rasa, dan budaya — dari sudut pandang baru.</p><a class="button" href="/panduan">Mulai menjelajah <span aria-hidden="true">→</span></a></div></div></section>
+    {featured ? <section class="featured" aria-label="Panduan pilihan"><a href={guideUrl(featured.slug)} aria-label={`Baca ${featured.title}`}><ContentImage cover={featured.cover} eager variant="featured" /></a><div class="feature-copy"><span class="eyebrow">Pilihan editorial / 01</span><h2><a href={guideUrl(featured.slug)}>{featured.title}</a></h2><p>{featured.excerpt}</p><div class="meta"><span>{featured.category.name}</span><span aria-hidden="true">·</span><span>{featured.readingTimeMinutes} menit baca</span></div><a class="textlink" href={guideUrl(featured.slug)}>Baca panduan <span aria-hidden="true">→</span></a></div></section> : <section class="page-empty"><span class="eyebrow">Catatan pertama sedang disiapkan</span><h2>Belum ada panduan terbit.</h2><p>Silakan kembali lagi untuk menemukan cerita lokal yang baru.</p><a class="textlink" href="/tentang">Tentang Jelajah Lokal <span aria-hidden="true">→</span></a></section>}
+    {categoryList.length > 0 && <section class="categories"><span class="eyebrow">Mulai dari rasa ingin tahu</span><nav class="category-links" aria-label="Kategori panduan">{categoryList.map(category => <a href={`/panduan?kategori=${encodeURIComponent(category.slug)}`}>{category.name} <span aria-hidden="true">→</span></a>)}</nav></section>}
+    {latest.length > 0 && <section class="latest"><div class="section-head"><div><span class="eyebrow">Bacaan baru</span><h2>Untuk perjalanan berikutnya.</h2></div><a class="textlink" href="/panduan">Semua panduan <span aria-hidden="true">→</span></a></div><div class="grid">{latest.map(item => <ArticleCard article={item} />)}</div></section>}
+    <section class="editorial"><h2>Lebih dekat.<br />Lebih bermakna.</h2><p>Konten ilustratif disusun untuk proyek portfolio. Bantuan AI terbatas pada usulan metadata dari draft tersimpan — tulisan, pemeriksaan informasi, dan keputusan terbit tetap di tangan editor.</p><a class="textlink" href="/tentang">Cara kami menulis <span aria-hidden="true">→</span></a></section>
+  </>}
+</SiteLayout>

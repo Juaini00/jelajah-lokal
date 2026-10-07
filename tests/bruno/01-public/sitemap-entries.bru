@@ -1,0 +1,30 @@
+meta {
+  name: GET public sitemap entries
+  type: http
+  seq: 7
+}
+
+get {
+  url: {{baseUrl}}/api/public/sitemap-entries
+  body: none
+  auth: none
+}
+
+headers {
+  Authorization: Bearer {{apiContentToken}}
+}
+
+assert {
+  res.status: eq 200
+}
+
+tests {
+  test("sitemap entries are published-only slug + lastmod pairs", function () {
+    const data = res.getBody().data;
+    expect(data).to.be.an("array");
+    for (const entry of data) {
+      expect(entry).to.include.all.keys("slug", "updatedAt");
+      expect(Object.keys(entry).length).to.equal(2);
+    }
+  });
+}

@@ -1,0 +1,28 @@
+meta {
+  name: POST media upload rejects non-image file
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/api/admin/media
+  body: multipartForm
+  auth: none
+}
+
+headers {
+  Origin: {{apiPublicOrigin}}
+  X-CSRF-Token: {{adminCsrfToken}}
+}
+
+body:multipart-form {
+  file: @file(./fixtures/invalid-not-image.txt)
+  credit: Bruno Test Suite
+  sourceUrl: https://example.com/not-a-real-source
+  license: CC0
+}
+
+assert {
+  res.status: eq 422
+  res.body.error.code: eq MEDIA_INVALID
+}

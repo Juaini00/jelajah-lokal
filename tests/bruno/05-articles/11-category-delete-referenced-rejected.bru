@@ -1,0 +1,27 @@
+meta {
+  name: DELETE category referenced by article is rejected 409
+  type: http
+  seq: 11
+}
+
+delete {
+  url: {{baseUrl}}/api/admin/categories/{{categoryMainId}}
+  body: none
+  auth: none
+}
+
+headers {
+  Origin: {{apiPublicOrigin}}
+  X-CSRF-Token: {{adminCsrfToken}}
+}
+
+assert {
+  res.status: eq 409
+}
+
+tests {
+  test("referenced category cannot be deleted without reassignment", function () {
+    expect(res.getStatus()).to.equal(409);
+    expect(res.getBody().error).to.exist;
+  });
+}

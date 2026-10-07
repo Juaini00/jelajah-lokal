@@ -1,0 +1,21 @@
+meta {
+  name: GET admin article draft by documentId
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{baseUrl}}/api/admin/articles/{{articleId}}
+  body: none
+  auth: none
+}
+
+headers {
+  Origin: {{apiPublicOrigin}}
+  X-CSRF-Token: {{adminCsrfToken}}
+}
+
+assert {
+  res.status: eq 200
+  res.body.data.documentId: eq {{articleId}}
+}

@@ -1,0 +1,39 @@
+meta {
+  name: POST /mcp without X-MCP-API-Key is rejected before any tool runs
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/mcp
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Accept: application/json, text/event-stream
+}
+
+body:json {
+  {
+    "jsonrpc": "2.0",
+    "id": 1,
+    "method": "initialize",
+    "params": {
+      "protocolVersion": "2024-11-05",
+      "capabilities": {},
+      "clientInfo": { "name": "bruno-acceptance", "version": "1.0.0" }
+    }
+  }
+}
+
+assert {
+  res.status: eq 401
+}
+
+tests {
+  test("initialization/discovery itself requires the MCP key, not just tool calls", function () {
+    expect(res.getStatus()).to.equal(401);
+  });
+}

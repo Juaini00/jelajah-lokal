@@ -1,0 +1,26 @@
+meta {
+  name: DELETE cover media referenced by article is rejected 409
+  type: http
+  seq: 13
+}
+
+delete {
+  url: {{baseUrl}}/api/admin/media/{{mediaMainId}}
+  body: none
+  auth: none
+}
+
+headers {
+  Origin: {{apiPublicOrigin}}
+  X-CSRF-Token: {{adminCsrfToken}}
+}
+
+assert {
+  res.status: eq 409
+}
+
+tests {
+  test("referenced media cannot be deleted (contract: DELETE referenced media rejected 409)", function () {
+    expect(res.getStatus()).to.equal(409);
+  });
+}

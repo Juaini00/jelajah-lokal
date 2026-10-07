@@ -1,0 +1,34 @@
+meta {
+  name: POST unpublish article
+  type: http
+  seq: 17
+}
+
+post {
+  url: {{baseUrl}}/api/admin/articles/{{articleId}}/unpublish
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Origin: {{apiPublicOrigin}}
+  X-CSRF-Token: {{adminCsrfToken}}
+}
+
+body:json {
+  {
+    "revision": {{articleRevision}}
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.data.publishedAt: eq null
+}
+
+script:post-response {
+  if (res.getStatus() === 200) {
+    bru.setVar("articleRevision", res.getBody().data.revision);
+  }
+}

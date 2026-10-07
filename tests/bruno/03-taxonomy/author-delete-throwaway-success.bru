@@ -1,0 +1,21 @@
+meta {
+  name: DELETE unreferenced throwaway author succeeds
+  type: http
+  seq: 11
+}
+
+delete {
+  url: {{baseUrl}}/api/admin/authors/{{authorThrowawayId}}
+  body: none
+  auth: none
+}
+
+headers {
+  Origin: {{apiPublicOrigin}}
+  X-CSRF-Token: {{adminCsrfToken}}
+}
+
+assert {
+  res.status: eq 200
+  res.body.data.deleted: eq true
+}

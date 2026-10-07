@@ -1,0 +1,27 @@
+meta {
+  name: GET admin media list
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{baseUrl}}/api/admin/media
+  body: none
+  auth: none
+}
+
+headers {
+  Origin: {{apiPublicOrigin}}
+  X-CSRF-Token: {{adminCsrfToken}}
+}
+
+assert {
+  res.status: eq 200
+}
+
+tests {
+  test("includes the uploaded media asset", function () {
+    const ids = res.getBody().data.map((m) => m.documentId);
+    expect(ids).to.include(bru.getVar("mediaMainId"));
+  });
+}

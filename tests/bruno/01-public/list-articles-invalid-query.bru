@@ -1,0 +1,31 @@
+meta {
+  name: GET public articles rejects unknown query param
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{baseUrl}}/api/public/articles?status=draft&populate=*
+  body: none
+  auth: none
+}
+
+headers {
+  Authorization: Bearer {{apiContentToken}}
+}
+
+params:query {
+  status: draft
+  populate: *
+}
+
+assert {
+  res.status: eq 200
+}
+
+tests {
+  test("raw Strapi-style filters are never forwarded (ignored, not applied as a hidden filter)", function () {
+    expect(res.getStatus()).to.equal(200);
+    expect(res.getBody().data).to.be.an("array");
+  });
+}

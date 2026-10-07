@@ -1,0 +1,32 @@
+meta {
+  name: PATCH update main category
+  type: http
+  seq: 5
+}
+
+patch {
+  url: {{baseUrl}}/api/admin/categories/{{categoryMainId}}
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Origin: {{apiPublicOrigin}}
+  X-CSRF-Token: {{adminCsrfToken}}
+}
+
+body:json {
+  {
+    "name": "Destinasi Uji Diperbarui",
+    "slug": "destinasi-uji-{{runNonce}}",
+    "description": "Deskripsi diperbarui oleh pengujian Bruno.",
+    "order": 2
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.data.name: eq Destinasi Uji Diperbarui
+  res.body.data.order: eq 2
+}

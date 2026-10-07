@@ -1,0 +1,21 @@
+meta {
+  name: DELETE a draft that was never published succeeds
+  type: http
+  seq: 21
+}
+
+delete {
+  url: {{baseUrl}}/api/admin/articles/{{articleThrowawayId}}
+  body: none
+  auth: none
+}
+
+headers {
+  Origin: {{apiPublicOrigin}}
+  X-CSRF-Token: {{adminCsrfToken}}
+}
+
+assert {
+  res.status: eq 200
+  res.body.data.deleted: eq true
+}

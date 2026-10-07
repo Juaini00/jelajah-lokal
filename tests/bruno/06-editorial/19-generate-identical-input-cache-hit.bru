@@ -1,0 +1,38 @@
+meta {
+  name: POST generate with unchanged draft content and a new idempotencyKey is a cache hit (T-10)
+  type: http
+  seq: 19
+}
+
+post {
+  url: {{baseUrl}}/api/admin/editorial/generate
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Origin: {{apiPublicOrigin}}
+  X-CSRF-Token: {{adminCsrfToken}}
+}
+
+body:json {
+  {
+    "articleDocumentId": "{{editorialArticleId}}",
+    "idempotencyKey": "{{idemKeyCacheProbe}}"
+  }
+}
+
+tests {
+  test("same normalized input reuses the cached validated result without consuming quota", function () {
+    if (bru.getVar("generateStatus2") == 200) {
+      expect(res.getStatus()).to.equal(200);
+      const body = res.getBody();
+      expect(body.cacheHit).to.equal(true);
+      expect(body.quota.used).to.equal(bru.getVar("quotaUsedAfterGenerate2"));
+      expect(body.result).to.deep.equal(res.getBody().result);
+    } else {
+      expect(res.getStatus()).to.equal(503);
+    }
+  });
+}

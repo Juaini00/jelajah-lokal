@@ -1,0 +1,73 @@
+meta {
+  name: PATCH draft with full publish-ready fields
+  type: http
+  seq: 6
+}
+
+patch {
+  url: {{baseUrl}}/api/admin/articles/{{articleId}}
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Origin: {{apiPublicOrigin}}
+  X-CSRF-Token: {{adminCsrfToken}}
+}
+
+body:json {
+  {
+    "revision": {{articleRevision}},
+    "title": "Panduan Pesisir Selatan yang Jarang Diketahui",
+    "slug": "pesisir-selatan-uji-{{runNonce}}",
+    "body": [
+      { "type": "heading", "level": 2, "children": [ { "type": "text", "text": "Pesona Pesisir Selatan yang Jarang Diketahui" } ] },
+      { "type": "paragraph", "children": [ { "type": "text", "text": "Pesisir selatan menyimpan garis pantai berpasir putih yang masih tenang dari keramaian wisata massal. Pengunjung dapat menikmati suara ombak yang berirama sambil berjalan santai di sepanjang bibir pantai pada pagi hari ketika cahaya matahari masih lembut. Nelayan setempat biasanya baru kembali dari melaut dan menjajakan hasil tangkapan segar langsung di tepi pantai. Udara pagi yang sejuk bercampur aroma laut memberikan pengalaman yang sulit ditemukan di destinasi wisata yang lebih ramai. Jalan menuju kawasan ini masih berupa jalan desa sederhana sehingga disarankan menggunakan kendaraan dengan ground clearance yang cukup tinggi." } ] },
+      { "type": "paragraph", "children": [ { "type": "text", "text": "Selain pantai, kawasan ini juga memiliki perbukitan kecil yang dapat didaki dalam waktu sekitar satu jam untuk melihat panorama garis pantai dari ketinggian. Warga sekitar membuka warung kopi sederhana di titik pandang tersebut sehingga pengunjung dapat beristirahat sambil menikmati pemandangan. Beberapa acara tahunan seperti festival nelayan diadakan pada musim kemarau dan menampilkan pertunjukan perahu hias serta kuliner khas daerah. Pengunjung yang datang pada akhir pekan disarankan tiba lebih pagi karena area parkir informal di dekat pantai cukup terbatas. Fasilitas umum seperti toilet dan tempat ibadah sudah tersedia meskipun masih sederhana." } ] },
+      { "type": "list", "ordered": false, "items": [
+        [ { "type": "text", "text": "Bawa alas kaki yang nyaman untuk medan berbatu" } ],
+        [ { "type": "text", "text": "Siapkan uang tunai karena warung lokal belum menerima pembayaran digital" } ],
+        [ { "type": "text", "text": "Hormati adat dan kebiasaan nelayan setempat saat berkunjung" } ]
+      ] }
+    ],
+    "excerpt": "Jelajahi pantai tenang di pesisir selatan yang masih sepi pengunjung, lengkap dengan bukit pandang dan kuliner nelayan.",
+    "metaDescription": "Panduan singkat berkunjung ke pantai tenang pesisir selatan: akses jalan, bukit pandang, kuliner nelayan, dan tips kunjungan.",
+    "tags": ["wisata lokal", "pesisir", "budaya"],
+    "categoryDocumentId": "{{categoryMainId}}",
+    "authorDocumentId": "{{authorMainId}}",
+    "coverMediaDocumentId": "{{mediaMainId}}",
+    "coverAlt": "Garis pantai berpasir putih pesisir selatan saat pagi hari",
+    "coverCaption": "Pesisir selatan pada pagi hari",
+    "imageCredit": "Foto oleh Bruno Test Suite",
+    "imageSourceUrl": "https://example.com/bruno-fixture",
+    "sourceLinks": [
+      { "label": "Dinas Pariwisata Daerah", "url": "https://example.com/dinas-pariwisata", "accessedAt": "2026-10-01T00:00:00Z" }
+    ],
+    "informationCheckedAt": "2026-10-01T00:00:00Z",
+    "operationalClaims": true,
+    "regionLabel": "Wilayah Contoh",
+    "featured": false
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.data.title: eq Panduan Pesisir Selatan yang Jarang Diketahui
+}
+
+script:post-response {
+  if (res.getStatus() === 200) {
+    const data = res.getBody().data;
+    bru.setVar("articleRevision", data.revision);
+    bru.setVar("articleSlug", data.slug);
+  }
+}
+
+tests {
+  test("revision incremented by the update, publishedAt still null", function () {
+    const data = res.getBody().data;
+    expect(data.revision).to.be.above(1);
+    expect(data.publishedAt).to.equal(null);
+  });
+}

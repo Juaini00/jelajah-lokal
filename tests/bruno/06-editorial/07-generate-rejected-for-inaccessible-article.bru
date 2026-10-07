@@ -1,0 +1,35 @@
+meta {
+  name: POST generate rejected for editor without rights to this article
+  type: http
+  seq: 7
+}
+
+post {
+  url: {{baseUrl}}/api/admin/editorial/generate
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Origin: {{apiPublicOrigin}}
+  X-CSRF-Token: {{editorCsrfToken}}
+}
+
+body:json {
+  {
+    "articleDocumentId": "{{editorialArticleId}}",
+    "idempotencyKey": "{{idemKeyEditorNoAccess}}"
+  }
+}
+
+assert {
+  res.status: eq 403
+}
+
+tests {
+  test("permission check covers article ownership, not just login state (T-04/T-15)", function () {
+    expect([403, 404]).to.include(res.getStatus());
+    expect(res.getBody().error).to.exist;
+  });
+}

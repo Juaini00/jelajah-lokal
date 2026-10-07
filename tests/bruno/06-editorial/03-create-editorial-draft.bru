@@ -1,0 +1,38 @@
+meta {
+  name: POST create a fresh admin-owned draft for editorial AI tests
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/api/admin/articles
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Origin: {{apiPublicOrigin}}
+  X-CSRF-Token: {{adminCsrfToken}}
+}
+
+body:json {
+  {
+    "title": "Draft untuk pengujian Editorial Assistant",
+    "body": [
+      { "type": "paragraph", "children": [ { "type": "text", "text": "Lembah kecil di pinggiran desa ini menyimpan kebun kopi rakyat yang dikelola turun-temurun oleh warga setempat. Pengunjung dapat ikut proses memetik biji kopi matang pada pagi hari lalu melihat langsung tahap penjemuran dan penyangraian sederhana di halaman rumah petani. Suasana desa yang tenang, dikelilingi pepohonan rindang dan udara sejuk pegunungan, membuat kunjungan terasa seperti pulang ke rumah nenek. Warga biasa menyediakan tempat duduk kayu sederhana bagi tamu yang ingin mencicipi kopi seduh langsung dari kebun sambil mendengarkan cerita sejarah desa dari sesepuh setempat." } ] },
+      { "type": "paragraph", "children": [ { "type": "text", "text": "Selain kebun kopi, terdapat jalur jalan kaki pendek menuju mata air alami yang dipercaya warga sebagai sumber air bersih utama desa sejak puluhan tahun lalu. Jalur ini relatif mudah dilalui keluarga dengan anak-anak, meski tetap disarankan memakai alas kaki yang tidak licin karena sebagian jalan berupa tanah basah. Di dekat mata air terdapat gazebo kecil yang kerap dipakai warga untuk bersantai pada sore hari. Kunjungan sebaiknya dilakukan pada musim kemarau agar jalur setapak tidak terlalu becek dan pemandangan kebun kopi terlihat lebih jelas." } ] }
+    ]
+  }
+}
+
+assert {
+  res.status: eq 201
+}
+
+script:post-response {
+  if (res.getStatus() === 201) {
+    bru.setVar("editorialArticleId", res.getBody().data.documentId);
+    bru.setVar("editorialArticleRevision", res.getBody().data.revision);
+  }
+}

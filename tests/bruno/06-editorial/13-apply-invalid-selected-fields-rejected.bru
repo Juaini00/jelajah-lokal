@@ -1,0 +1,30 @@
+meta {
+  name: POST apply with empty selectedFields is rejected
+  type: http
+  seq: 13
+}
+
+post {
+  url: {{baseUrl}}/api/admin/editorial/apply
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Origin: {{apiPublicOrigin}}
+  X-CSRF-Token: {{adminCsrfToken}}
+}
+
+body:json {
+  {
+    "requestId": "{{generateRequestId2}}",
+    "selectedFields": [],
+    "values": {}
+  }
+}
+
+assert {
+  res.status: eq 422
+  res.body.error.code: eq INVALID_REQUEST
+}

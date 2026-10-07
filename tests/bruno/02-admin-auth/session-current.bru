@@ -1,0 +1,23 @@
+meta {
+  name: GET admin session reflects logged-in principal
+  type: http
+  seq: 5
+}
+
+get {
+  url: {{baseUrl}}/api/admin/session
+  body: none
+  auth: none
+}
+
+assert {
+  res.status: eq 200
+  res.body.data.principal.username: eq {{adminUsername}}
+}
+
+tests {
+  test("session DTO matches login DTO shape", function () {
+    const body = res.getBody();
+    expect(body.data).to.include.all.keys("principal", "csrfToken");
+  });
+}

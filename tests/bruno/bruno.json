@@ -1,0 +1,9 @@
+{
+  "version": "1",
+  "name": "Jelajah Lokal API",
+  "type": "collection",
+  "ignore": ["node_modules", ".git"],
+  "presets": {
+    "requestType": "http"
+  }
+}

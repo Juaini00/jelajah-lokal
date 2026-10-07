@@ -1,0 +1,30 @@
+meta {
+  name: PATCH draft rejects unknown request property
+  type: http
+  seq: 4
+}
+
+patch {
+  url: {{baseUrl}}/api/admin/articles/{{articleId}}
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Origin: {{apiPublicOrigin}}
+  X-CSRF-Token: {{adminCsrfToken}}
+}
+
+body:json {
+  {
+    "revision": {{articleRevision}},
+    "title": "Draft uji coba belum lengkap",
+    "notAContractField": true
+  }
+}
+
+assert {
+  res.status: eq 422
+  res.body.error.code: eq INVALID_REQUEST
+}

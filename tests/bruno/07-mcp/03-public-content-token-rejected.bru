@@ -1,0 +1,40 @@
+meta {
+  name: POST /mcp rejects the public API_CONTENT_TOKEN as an MCP key
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/mcp
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Accept: application/json, text/event-stream
+  X-MCP-API-Key: {{apiContentToken}}
+}
+
+body:json {
+  {
+    "jsonrpc": "2.0",
+    "id": 1,
+    "method": "initialize",
+    "params": {
+      "protocolVersion": "2024-11-05",
+      "capabilities": {},
+      "clientInfo": { "name": "bruno-acceptance", "version": "1.0.0" }
+    }
+  }
+}
+
+assert {
+  res.status: eq 401
+}
+
+tests {
+  test("credential scopes never cross between public content token and MCP key", function () {
+    expect(res.getStatus()).to.equal(401);
+  });
+}

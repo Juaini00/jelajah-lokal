@@ -1,0 +1,28 @@
+meta {
+  name: Public content token cannot perform admin mutations
+  type: http
+  seq: 10
+}
+
+post {
+  url: {{baseUrl}}/api/admin/categories
+  body: json
+  auth: none
+}
+
+headers {
+  Authorization: Bearer {{apiContentToken}}
+}
+
+body:json {
+  {
+    "name": "Should Not Be Created",
+    "slug": "should-not-be-created",
+    "description": "",
+    "order": 1
+  }
+}
+
+assert {
+  res.status: eq 401
+}

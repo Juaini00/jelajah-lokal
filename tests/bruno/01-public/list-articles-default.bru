@@ -1,0 +1,46 @@
+meta {
+  name: GET public articles default page
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/api/public/articles
+  body: none
+  auth: none
+}
+
+headers {
+  Authorization: Bearer {{apiContentToken}}
+}
+
+assert {
+  res.status: eq 200
+  res.body.meta.page: eq 1
+  res.body.meta.pageSize: eq 9
+}
+
+tests {
+  test("list exposes only published-shaped cards", function () {
+    const body = res.getBody();
+    expect(body.data).to.be.an("array");
+    expect(body.meta).to.include.all.keys("page", "pageSize", "pageCount", "total");
+    for (const card of body.data) {
+      expect(card).to.include.all.keys(
+        "documentId", "slug", "title", "excerpt", "category", "author",
+        "cover", "publishedAt", "readingTimeMinutes", "featured"
+      );
+      expect(card).to.not.have.any.keys("body", "revision", "authorDocumentId", "categoryDocumentId");
+      expect(card.cover).to.include.all.keys("url", "alt", "width", "height");
+    }
+  });
+
+  test("sorted by publishedAt desc, documentId asc tiebreak", function () {
+    const data = res.getBody().data;
+    for (let i = 1; i < data.length; i++) {
+      const prev = new Date(data[i - 1].publishedAt).getTime();
+      const cur = new Date(data[i].publishedAt).getTime();
+      expect(prev >= cur).to.equal(true);
+    }
+  });
+}

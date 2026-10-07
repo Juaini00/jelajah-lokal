@@ -1,0 +1,43 @@
+meta {
+  name: POST publish complete draft succeeds
+  type: http
+  seq: 8
+}
+
+post {
+  url: {{baseUrl}}/api/admin/articles/{{articleId}}/publish
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Origin: {{apiPublicOrigin}}
+  X-CSRF-Token: {{adminCsrfToken}}
+}
+
+body:json {
+  {
+    "revision": {{articleRevision}}
+  }
+}
+
+assert {
+  res.status: eq 200
+}
+
+script:post-response {
+  if (res.getStatus() === 200) {
+    const data = res.getBody().data;
+    bru.setVar("articleRevision", data.revision);
+    bru.setVar("publishedRevisionAtPublish", data.publishedRevision);
+  }
+}
+
+tests {
+  test("publish sets publishedAt and a matching publishedRevision pointer", function () {
+    const data = res.getBody().data;
+    expect(data.publishedAt).to.not.equal(null);
+    expect(data.publishedRevision).to.not.equal(null);
+  });
+}

@@ -1,0 +1,34 @@
+meta {
+  name: POST create second throwaway incomplete draft
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/api/admin/articles
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Origin: {{apiPublicOrigin}}
+  X-CSRF-Token: {{adminCsrfToken}}
+}
+
+body:json {
+  {
+    "title": "Draft sekali pakai untuk pengujian penolakan publish"
+  }
+}
+
+assert {
+  res.status: eq 201
+}
+
+script:post-response {
+  if (res.getStatus() === 201) {
+    bru.setVar("articleThrowawayId", res.getBody().data.documentId);
+    bru.setVar("articleThrowawayRevision", res.getBody().data.revision);
+  }
+}

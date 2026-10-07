@@ -1,0 +1,41 @@
+meta {
+  name: PATCH saving a draft edit after publish does not touch the live version
+  type: http
+  seq: 15
+}
+
+patch {
+  url: {{baseUrl}}/api/admin/articles/{{articleId}}
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Origin: {{apiPublicOrigin}}
+  X-CSRF-Token: {{adminCsrfToken}}
+}
+
+body:json {
+  {
+    "revision": {{articleRevision}},
+    "excerpt": "EXCERPT DRAFT BARU YANG BELUM DITERBITKAN - seharusnya tidak terlihat publik."
+  }
+}
+
+assert {
+  res.status: eq 200
+}
+
+script:post-response {
+  if (res.getStatus() === 200) {
+    bru.setVar("articleRevision", res.getBody().data.revision);
+  }
+}
+
+tests {
+  test("draft save succeeds and returns the new unpublished excerpt", function () {
+    expect(res.getBody().data.excerpt).to.include("EXCERPT DRAFT BARU");
+    expect(res.getBody().data.publishedAt).to.not.equal(null);
+  });
+}

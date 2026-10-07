@@ -1,0 +1,46 @@
+meta {
+  name: GET public article detail reflects the newly published article
+  type: http
+  seq: 14
+}
+
+get {
+  url: {{baseUrl}}/api/public/articles/{{articleSlug}}
+  body: none
+  auth: none
+}
+
+headers {
+  Authorization: Bearer {{apiContentToken}}
+}
+
+assert {
+  res.status: eq 200
+  res.body.data.slug: eq {{articleSlug}}
+}
+
+script:post-response {
+  if (res.getStatus() === 200) {
+    bru.setVar("publicArticleUpdatedAtBeforeDraftEdit", res.getBody().data.updatedAt);
+    bru.setVar("publicArticleExcerptBeforeDraftEdit", res.getBody().data.excerpt);
+  }
+}
+
+tests {
+  test("public detail excludes private/admin/AI-history fields", function () {
+    const data = res.getBody().data;
+    expect(data).to.include.all.keys(
+      "documentId", "slug", "title", "excerpt", "category", "author", "cover",
+      "publishedAt", "readingTimeMinutes", "featured", "body", "metaDescription",
+      "tags", "sourceLinks", "informationCheckedAt", "coverCaption", "imageCredit",
+      "imageSourceUrl", "regionLabel", "updatedAt"
+    );
+    expect(data).to.not.have.any.keys("revision", "authorDocumentId", "categoryDocumentId", "coverMediaDocumentId", "publishedRevision");
+  });
+
+  test("body blocks never contain raw HTML or executable markup", function () {
+    const bodyText = JSON.stringify(res.getBody().data.body);
+    expect(bodyText).to.not.match(/<script/i);
+    expect(bodyText).to.not.match(/on[a-z]+\s*=\s*"/i);
+  });
+}

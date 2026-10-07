@@ -1,0 +1,26 @@
+meta {
+  name: Public content token cannot authorize admin routes
+  type: http
+  seq: 9
+}
+
+get {
+  url: {{baseUrl}}/api/admin/articles
+  body: none
+  auth: none
+}
+
+headers {
+  Authorization: Bearer {{apiContentToken}}
+}
+
+assert {
+  res.status: eq 401
+}
+
+tests {
+  test("public bearer token never authorizes any private route", function () {
+    expect([401, 403]).to.include(res.getStatus());
+    expect(res.getBody().error).to.exist;
+  });
+}

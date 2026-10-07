@@ -1,0 +1,91 @@
+---
+import SiteLayout from '../../layouts/SiteLayout.astro';
+import ArticleCard from '../../components/ArticleCard.astro';
+import ErrorState from '../../components/ErrorState.astro';
+import { articles, categories, ContentError } from '../../lib/server/api';
+import type { Category, PublicArticleCard } from '../../lib/server/contracts';
+import { listingUrl } from '../../lib/urls';
+
+let categoryList: Category[] = [];
+let categoryError = false;
+try {
+  categoryList = (await categories()).data;
+} catch {
+  categoryError = true;
+}
+
+const rawPage = Astro.url.searchParams.get('page');
+const rawCategory = Astro.url.searchParams.get('kategori');
+let invalidQuery = false;
+let page = 1;
+let categoryParam: string | undefined;
+
+if (rawPage !== null) {
+  if (!/^[1-9]\d{0,3}$/.test(rawPage) || Number(rawPage) > 1000) invalidQuery = true;
+  else page = Number(rawPage);
+}
+if (rawCategory !== null && rawCategory !== '') {
+  if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(rawCategory) || rawCategory.length > 120) invalidQuery = true;
+  else categoryParam = rawCategory;
+}
+
+let articleList: PublicArticleCard[] = [];
+let meta = { page: 1, pageSize: 9, pageCount: 1, total: 0 };
+let notFound = false;
+let serviceError = categoryError;
+
+if (!invalidQuery && !categoryError) {
+  try {
+    const response = await articles({ page, category: categoryParam });
+    articleList = response.data;
+    meta = response.meta;
+  } catch (error) {
+    if (error instanceof ContentError && (error.status === 404 || error.status === 400)) notFound = true;
+    else serviceError = true;
+  }
+}
+
+const activeCategory = categoryParam ? categoryList.find(category => category.slug === categoryParam) : undefined;
+const status = invalidQuery || notFound ? 400 : serviceError ? 503 : 200;
+if (status !== 200) Astro.response.status = status;
+const prevUrl = page > 1 ? listingUrl(categoryParam || '', page - 1) : undefined;
+const nextUrl = meta.pageCount > page ? listingUrl(categoryParam || '', page + 1) : undefined;
+---
+<SiteLayout title="Panduan — Jelajah Lokal" description="Jelajahi panduan destinasi, kuliner, dan budaya lokal berdasarkan kategori." path="/panduan" noindex={status !== 200}>
+  <section class="guide-intro">
+    <div class="intro-top"><span class="eyebrow">Catatan perjalanan lokal</span></div>
+    <div class="guide-line"><h1>Panduan</h1><p>Kenali Indonesia dari dekat. Catatan tentang tempat, rasa, dan budaya untuk perjalanan yang lebih bermakna.</p></div>
+  </section>
+  <section class="filter-bar" aria-label="Filter panduan">
+    <form class="filter-form" action="/panduan" method="get">
+      <div class="filter-field">
+        <label for="kategori-panduan">Kategori panduan</label>
+        <select id="kategori-panduan" name="kategori">
+          <option value="" selected={!categoryParam}>Semua</option>
+          {categoryList.map(category => <option value={category.slug} selected={category.slug === categoryParam}>{category.name}</option>)}
+        </select>
+      </div>
+      <button class="button" type="submit">Terapkan</button>
+    </form>
+    {status === 200 && <p class="results-meta"><strong>{meta.total} panduan</strong><br />Maksimal 9 panduan per halaman</p>}
+  </section>
+  {activeCategory && status === 200 && <div class="active-context"><span class="sample">Kategori: {activeCategory.name}</span><a class="filter-reset" href="/panduan">Hapus filter</a></div>}
+  {status === 400 ? <ErrorState status={400} /> : status === 503 ? <ErrorState status={503} /> : articleList.length === 0 ? (
+    <section class="page-empty">
+      <span class="eyebrow">{activeCategory ? `Belum ada panduan di ${activeCategory.name}` : 'Belum ada panduan terbit'}</span>
+      <h2>Tidak ada panduan untuk ditampilkan.</h2>
+      <p>{activeCategory ? 'Coba kategori lain atau lihat semua panduan yang telah terbit.' : 'Panduan akan tampil di sini setelah editor menerbitkannya.'}</p>
+      {activeCategory && <a class="textlink" href="/panduan">Lihat semua panduan <span aria-hidden="true">→</span></a>}
+    </section>
+  ) : (
+    <section class="article-list" aria-label="Daftar panduan">
+      <div class="grid">{articleList.map(item => <ArticleCard article={item} />)}</div>
+      <nav class="pagination" aria-label="Navigasi halaman panduan">
+        {prevUrl ? <a class="button secondary" href={prevUrl}>← Sebelumnya</a> : <button class="button secondary" type="button" disabled aria-label="Halaman sebelumnya, tidak tersedia">← Sebelumnya</button>}
+        <span class="page-count">Halaman {meta.page} dari {meta.pageCount}</span>
+        {nextUrl ? <a class="button secondary" href={nextUrl}>Berikutnya →</a> : <button class="button secondary" type="button" disabled aria-label="Halaman berikutnya, tidak tersedia">Berikutnya →</button>}
+      </nav>
+      <p class="listing-note">{meta.total} panduan ditemukan{activeCategory ? ` dalam kategori ${activeCategory.name}` : ''}.</p>
+    </section>
+  )}
+</SiteLayout>

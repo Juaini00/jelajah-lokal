@@ -1,0 +1,48 @@
+meta {
+  name: POST /mcp initialize with a valid X-MCP-API-Key succeeds
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{baseUrl}}/mcp
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Accept: application/json, text/event-stream
+  X-MCP-API-Key: {{mcpApiKey}}
+}
+
+body:json {
+  {
+    "jsonrpc": "2.0",
+    "id": 1,
+    "method": "initialize",
+    "params": {
+      "protocolVersion": "2024-11-05",
+      "capabilities": {},
+      "clientInfo": { "name": "bruno-acceptance", "version": "1.0.0" }
+    }
+  }
+}
+
+assert {
+  res.status: eq 200
+}
+
+script:post-response {
+  const sid = res.getHeader("mcp-session-id");
+  if (sid) {
+    bru.setVar("mcpSessionId", sid);
+  }
+}
+
+tests {
+  test("valid key is accepted by the protected Streamable HTTP endpoint", function () {
+    expect(res.getStatus()).to.equal(200);
+    expect(res.getHeader("content-type") || "").to.include("text/event-stream");
+  });
+}

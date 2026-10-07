@@ -1,0 +1,35 @@
+meta {
+  name: Cookie-authenticated mutation without X-CSRF-Token is rejected
+  type: http
+  seq: 6
+}
+
+post {
+  url: {{baseUrl}}/api/admin/categories
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Origin: {{apiPublicOrigin}}
+}
+
+body:json {
+  {
+    "name": "CSRF Probe Category",
+    "slug": "csrf-probe-category",
+    "description": "",
+    "order": 99
+  }
+}
+
+assert {
+  res.status: eq 403
+}
+
+tests {
+  test("missing CSRF token blocks the mutation even with a valid session cookie", function () {
+    expect([401, 403]).to.include(res.getStatus());
+  });
+}

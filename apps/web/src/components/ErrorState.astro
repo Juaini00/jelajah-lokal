@@ -1,0 +1,10 @@
+---
+interface Props { status: 400 | 404 | 503; retryUrl?: string; }
+const { status, retryUrl = Astro.url.pathname + Astro.url.search } = Astro.props;
+---
+<section class="err" aria-labelledby="error-title">
+  <span class="eyebrow">{status === 503 ? '503 · Gangguan sementara' : status === 400 ? '400 · Periksa alamat' : '404 · Tidak ditemukan'}</span>
+  <h1 id="error-title">{status === 503 ? 'Panduan belum dapat dimuat.' : status === 400 ? 'Pilihan halaman tidak valid.' : 'Halaman ini tidak dapat dibuka.'}</h1>
+  {status === 503 ? <><p>Layanan konten belum dapat dihubungi. Ini bukan berarti tidak ada panduan. Coba lagi beberapa saat.</p><p>Tidak ada artikel pengganti yang ditampilkan. Permintaan hanya diulang ketika kamu memilih “Coba lagi”.</p></> : status === 400 ? <p>Gunakan kategori yang tersedia dan nomor halaman antara 1 dan 1.000. Kembali ke daftar untuk memilih ulang.</p> : <><p>Alamat yang kamu tuju tidak tersedia untuk publik. Periksa tautannya atau mulai lagi dari daftar panduan.</p><p>Halaman ini tidak menampilkan judul, kutipan, atau pratinjau konten yang belum tersedia untuk publik.</p></>}
+  <div class="actions">{status === 503 && <a class="button" href={retryUrl}>Coba lagi</a>}<a class:list={['button', { secondary: status === 503 }]} href="/panduan">Kembali ke Panduan</a>{status !== 503 && <a class="button secondary" href="/">Ke Beranda</a>}</div>
+</section>

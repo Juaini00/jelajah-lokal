@@ -1,0 +1,13 @@
+---
+import InlineText from './InlineText.astro';
+import ContentImage from './ContentImage.astro';
+import type { Block } from '../lib/server/contracts';
+interface Props { blocks: Block[]; }
+const blocks = Array.isArray(Astro.props.blocks) ? Astro.props.blocks : [];
+---
+{blocks.map(block => block?.type === 'paragraph' ? <p><InlineText nodes={block.children} /></p> :
+  block?.type === 'heading' && block.level === 2 ? <h2><InlineText nodes={block.children} /></h2> :
+  block?.type === 'heading' && block.level === 3 ? <h3><InlineText nodes={block.children} /></h3> :
+  block?.type === 'quote' ? <blockquote><p><InlineText nodes={block.children} /></p></blockquote> :
+  block?.type === 'list' && Array.isArray(block.items) ? (block.ordered ? <ol>{block.items.map(item => <li><InlineText nodes={item} /></li>)}</ol> : <ul>{block.items.map(item => <li><InlineText nodes={item} /></li>)}</ul>) :
+  block?.type === 'image' && block.media && typeof block.alt === 'string' && Number.isInteger(block.media.width) && block.media.width > 0 && Number.isInteger(block.media.height) && block.media.height > 0 ? <figure class="body-image"><ContentImage cover={{ ...block.media, alt: block.alt }} variant="body" />{typeof block.caption === 'string' && block.caption && <figcaption>{block.caption}</figcaption>}</figure> : null)}

@@ -1,0 +1,36 @@
+meta {
+  name: POST create throwaway (unreferenced) author
+  type: http
+  seq: 8
+}
+
+post {
+  url: {{baseUrl}}/api/admin/authors
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Origin: {{apiPublicOrigin}}
+  X-CSRF-Token: {{adminCsrfToken}}
+}
+
+body:json {
+  {
+    "name": "Penulis Sekali Pakai",
+    "slug": "penulis-sekali-pakai-{{runNonce}}",
+    "bio": "",
+    "avatarMediaDocumentId": null
+  }
+}
+
+assert {
+  res.status: eq 201
+}
+
+script:post-response {
+  if (res.getStatus() === 201) {
+    bru.setVar("authorThrowawayId", res.getBody().data.documentId);
+  }
+}

@@ -1,0 +1,38 @@
+meta {
+  name: POST apply retried with a DIFFERENT payload for the same request is a conflict
+  type: http
+  seq: 16
+}
+
+post {
+  url: {{baseUrl}}/api/admin/editorial/apply
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Origin: {{apiPublicOrigin}}
+  X-CSRF-Token: {{adminCsrfToken}}
+}
+
+body:json {
+  {
+    "requestId": "{{generateRequestId2}}",
+    "selectedFields": ["metaDescription"],
+    "values": {
+      "metaDescription": "Payload yang sepenuhnya berbeda, mencoba menerapkan ulang permintaan yang persis sama ini."
+    }
+  }
+}
+
+tests {
+  test("a different payload against an already-applied request is rejected (409 IDEMPOTENCY_CONFLICT)", function () {
+    if (bru.getVar("generateStatus2") == 200) {
+      expect(res.getStatus()).to.equal(409);
+      expect(res.getBody().error.code).to.equal("IDEMPOTENCY_CONFLICT");
+    } else {
+      expect(res.getStatus()).to.be.oneOf([404, 409]);
+    }
+  });
+}

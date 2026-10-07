@@ -1,0 +1,22 @@
+meta {
+  name: GET healthz
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/healthz
+  body: none
+  auth: none
+}
+
+assert {
+  res.status: eq 200
+  res.body.status: eq ok
+}
+
+tests {
+  test("process health payload is minimal", function () {
+    expect(res.getBody()).to.deep.equal({ status: "ok" });
+  });
+}

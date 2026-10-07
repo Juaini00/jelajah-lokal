@@ -1,0 +1,31 @@
+meta {
+  name: PATCH update main author
+  type: http
+  seq: 10
+}
+
+patch {
+  url: {{baseUrl}}/api/admin/authors/{{authorMainId}}
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Origin: {{apiPublicOrigin}}
+  X-CSRF-Token: {{adminCsrfToken}}
+}
+
+body:json {
+  {
+    "name": "Penulis Uji Bruno (Diperbarui)",
+    "slug": "{{authorMainSlug}}",
+    "bio": "Bio diperbarui oleh pengujian Bruno.",
+    "avatarMediaDocumentId": null
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.data.name: eq Penulis Uji Bruno (Diperbarui)
+}

@@ -1,0 +1,806 @@
+{
+  "schemaVersion": 1,
+  "seedIdentity": "jelajah-lokal-p0-v1",
+  "categories": [
+    {
+      "documentId": "8e20c1a8-a93a-5a36-b482-6c51fca55fe0",
+      "name": "Destinasi",
+      "slug": "destinasi",
+      "description": "Inspirasi menikmati lanskap dan perjalanan dekat dengan langkah yang lebih pelan.",
+      "order": 0
+    },
+    {
+      "documentId": "0ffa7180-db87-5bb6-a497-626e47a43e9f",
+      "name": "Kuliner",
+      "slug": "kuliner",
+      "description": "Catatan tentang rasa, pertanyaan sederhana, dan percakapan di sekitar makanan.",
+      "order": 1
+    },
+    {
+      "documentId": "f4896118-adc2-5e8f-a7ef-d200258c8311",
+      "name": "Budaya",
+      "slug": "budaya",
+      "description": "Inspirasi bertamu dengan hormat serta menghargai ruang dan cerita setempat.",
+      "order": 2
+    }
+  ],
+  "authors": [
+    {
+      "documentId": "fb7c0f0c-b4b5-5f97-9499-f6d444c1a72a",
+      "name": "Editor Jelajah Lokal",
+      "slug": "editor-jelajah-lokal",
+      "bio": "Penulis contoh editorial untuk proyek portfolio Jelajah Lokal. Menyusun inspirasi perjalanan generik, bukan laporan kunjungan atau informasi operasional terverifikasi.",
+      "avatarMediaDocumentId": null
+    }
+  ],
+  "articles": [
+    {
+      "documentId": "895515da-8445-5d0b-a996-c20cb34268cc",
+      "publication": "published",
+      "title": "Menemukan jeda di antara pematang sawah",
+      "slug": "menemukan-jeda-di-antara-pematang-sawah",
+      "body": [
+        {
+          "type": "heading",
+          "level": 2,
+          "children": [
+            {
+              "type": "text",
+              "text": "Berangkat tanpa daftar yang panjang"
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "children": [
+            {
+              "type": "text",
+              "text": "Ada perjalanan yang terasa penuh justru ketika kita tidak mengejar banyak tujuan. Bayangkan sebuah jeda di dekat lanskap sawah: garis pematang, perubahan warna tanaman, dan pepohonan yang membingkai pandangan. Catatan ini mengajak pembaca menyusun cara melihat, bukan menawarkan rute menuju sawah tertentu. Satu pemandangan dapat menjadi alasan untuk menurunkan tempo dan memberi perhatian pada sesuatu yang biasanya terlewat."
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "children": [
+            {
+              "type": "text",
+              "text": "Mulailah dengan mengurangi keinginan untuk merekam semuanya. Simpan telepon sejenak, amati arah garis pada bentang alam, lalu pilih satu detail untuk diingat. Barangkali yang menarik bukan panorama terluas, melainkan pertemuan warna hijau dan tanah di sudut pandangan. Kesan perjalanan tidak harus berubah menjadi daftar foto yang panjang agar terasa berarti."
+            }
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 2,
+          "children": [
+            {
+              "type": "text",
+              "text": "Lanskap bukan hanya latar foto"
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "children": [
+            {
+              "type": "text",
+              "text": "Pemandangan yang kita nikmati juga dapat merupakan ruang kerja dan bagian dari keseharian orang lain. Jangan menganggap setiap pematang sebagai jalur pengunjung. Mintalah penjelasan sebelum mendekati lahan, hormati penolakan, dan pilih tempat berhenti yang tidak mengganggu aktivitas. Rasa ingin tahu lebih berharga ketika berjalan bersama kesediaan untuk menjaga jarak."
+            }
+          ]
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            [
+              {
+                "type": "text",
+                "text": "Tentukan satu hal kecil yang ingin diamati, bukan banyak titik yang harus dicapai."
+              }
+            ],
+            [
+              {
+                "type": "text",
+                "text": "Bawa kembali sampah sendiri dan hindari menyentuh tanaman tanpa izin."
+              }
+            ],
+            [
+              {
+                "type": "text",
+                "text": "Catat kesan pribadi tanpa mengubahnya menjadi klaim tentang kehidupan warga."
+              }
+            ]
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 2,
+          "children": [
+            {
+              "type": "text",
+              "text": "Catatan sumber dan batasan"
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "children": [
+            {
+              "type": "text",
+              "text": "Tulisan ini adalah contoh inspirasi orisinal untuk portfolio Jelajah Lokal, bukan hasil kunjungan atau panduan operasional. Foto Tom Fisk di Pexels digunakan sebagai ilustrasi visual. Tidak ada harga, jam kunjungan, akses lahan, atau kondisi lapangan yang telah diverifikasi dalam artikel ini."
+            }
+          ]
+        }
+      ],
+      "excerpt": "Perjalanan pelan dimulai dari cara melihat. Catatan inspirasi tentang lanskap sawah, ruang untuk berhenti, dan menghargai tempat yang juga menjadi ruang kerja.",
+      "metaDescription": "Inspirasi perjalanan pelan di sekitar lanskap sawah: mengamati detail, menghormati ruang kerja, dan memberi waktu untuk jeda.",
+      "tags": [
+        "perjalanan pelan",
+        "lanskap sawah",
+        "inspirasi lokal"
+      ],
+      "categoryDocumentId": "8e20c1a8-a93a-5a36-b482-6c51fca55fe0",
+      "authorDocumentId": "fb7c0f0c-b4b5-5f97-9499-f6d444c1a72a",
+      "coverMediaDocumentId": "976d0ec4-e21c-55b3-9c0b-ba9e9de9775c",
+      "coverAlt": "Petak sawah hijau bertingkat dan pepohonan dilihat dari atas",
+      "coverCaption": "Lanskap sawah sebagai ilustrasi perjalanan pelan; foto bukan dokumentasi kunjungan penulis.",
+      "imageCredit": "Tom Fisk / Pexels",
+      "imageSourceUrl": "https://www.pexels.com/photo/stunning-aerial-view-of-bali-s-terraced-rice-fields-36810327/",
+      "sourceLinks": [
+        {
+          "label": "Sumber foto ilustrasi — Pexels",
+          "url": "https://www.pexels.com/photo/stunning-aerial-view-of-bali-s-terraced-rice-fields-36810327/",
+          "accessedAt": null
+        },
+        {
+          "label": "Lisensi Pexels",
+          "url": "https://www.pexels.com/license/",
+          "accessedAt": null
+        }
+      ],
+      "informationCheckedAt": null,
+      "operationalClaims": false,
+      "regionLabel": "Edisi contoh · Indonesia",
+      "featured": true
+    },
+    {
+      "documentId": "6803b05a-ba8c-5a60-a754-fac37f0a7d20",
+      "publication": "published",
+      "title": "Mengenal cerita di balik sepiring sate",
+      "slug": "mengenal-cerita-di-balik-sepiring-sate",
+      "body": [
+        {
+          "type": "heading",
+          "level": 2,
+          "children": [
+            {
+              "type": "text",
+              "text": "Mulai dari pertanyaan sederhana"
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "children": [
+            {
+              "type": "text",
+              "text": "Makanan sering menjadi bagian perjalanan yang paling mudah diingat. Namun mengenal sebuah sajian tidak perlu dimulai dari penilaian atau pencarian tempat yang disebut paling terkenal. Sepiring sate dalam foto ini menjadi undangan untuk memperhatikan bahan, bentuk penyajian, dan percakapan yang mungkin muncul di sekitarnya. Artikel ini menawarkan cara mendekati pengalaman makan, bukan daftar penjual atau rekomendasi warung tertentu."
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "children": [
+            {
+              "type": "text",
+              "text": "Bila ada kesempatan berbicara, ajukan pertanyaan yang tidak mengganggu pekerjaan. Tanyakan bahan yang digunakan atau bagaimana penjual menyebut sajian itu. Dengarkan jawabannya tanpa memaksa cerita panjang, terutama ketika pesanan sedang ramai. Satu jawaban singkat tetap dapat membantu kita memahami bahwa sebuah makanan tidak harus memiliki kisah dramatis untuk layak dihargai."
+            }
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 2,
+          "children": [
+            {
+              "type": "text",
+              "text": "Rasa tidak perlu dilombakan"
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "children": [
+            {
+              "type": "text",
+              "text": "Kesan terhadap makanan bersifat pribadi. Alih-alih menulis bahwa satu sajian pasti paling enak, catat apa yang benar-benar kamu amati: tekstur, aroma, atau cara saus disajikan. Hindari menyimpulkan tradisi suatu daerah hanya dari satu piring. Jika perlu memastikan bahan yang berkaitan dengan kebutuhan makan pribadi, mintalah informasi langsung dan jangan menebaknya dari foto."
+            }
+          ]
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            [
+              {
+                "type": "text",
+                "text": "Minta izin sebelum memotret penjual atau pelanggan lain."
+              }
+            ],
+            [
+              {
+                "type": "text",
+                "text": "Bedakan pengamatan pribadi dari penjelasan yang benar-benar diberikan penjual."
+              }
+            ],
+            [
+              {
+                "type": "text",
+                "text": "Sampaikan apresiasi dengan wajar tanpa menuntut percakapan sebagai bagian dari pembelian."
+              }
+            ]
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 2,
+          "children": [
+            {
+              "type": "text",
+              "text": "Catatan sumber dan batasan"
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "children": [
+            {
+              "type": "text",
+              "text": "Ini adalah contoh inspirasi orisinal untuk portfolio, bukan ulasan hasil kunjungan. Foto Noval Gani di Pexels menjadi rujukan visual sate, bukan bukti bahan, harga, kebersihan, atau layanan sebuah tempat. Informasi operasional dan kebutuhan makan harus diperiksa langsung pada penyedia yang dipilih pembaca."
+            }
+          ]
+        }
+      ],
+      "excerpt": "Sepiring makanan bisa menjadi awal percakapan. Inspirasi mengenal sajian dari bahan dan cara penyajiannya tanpa menyamar sebagai ulasan tempat makan.",
+      "metaDescription": "Catatan inspirasi menikmati sate dengan rasa ingin tahu: bertanya tentang bahan, mendengarkan cerita, dan menghormati kesibukan penjual.",
+      "tags": [
+        "kuliner lokal",
+        "sate",
+        "cerita makanan"
+      ],
+      "categoryDocumentId": "0ffa7180-db87-5bb6-a497-626e47a43e9f",
+      "authorDocumentId": "fb7c0f0c-b4b5-5f97-9499-f6d444c1a72a",
+      "coverMediaDocumentId": "80727807-b9d3-50da-9881-0ebe1a7a7a29",
+      "coverAlt": "Tusuk sate bersaus disajikan di atas daun pisang dekat wajan beruap",
+      "coverCaption": "Sajian sate sebagai ilustrasi; tidak menunjukkan tempat makan yang diulas oleh penulis.",
+      "imageCredit": "Noval Gani / Pexels",
+      "imageSourceUrl": "https://www.pexels.com/photo/authentic-indonesian-street-food-satay-37121687/",
+      "sourceLinks": [
+        {
+          "label": "Sumber foto ilustrasi — Pexels",
+          "url": "https://www.pexels.com/photo/authentic-indonesian-street-food-satay-37121687/",
+          "accessedAt": null
+        },
+        {
+          "label": "Lisensi Pexels",
+          "url": "https://www.pexels.com/license/",
+          "accessedAt": null
+        }
+      ],
+      "informationCheckedAt": null,
+      "operationalClaims": false,
+      "regionLabel": "Edisi contoh · Indonesia",
+      "featured": false
+    },
+    {
+      "documentId": "eff58c20-680d-5e9d-96d8-ff9cf0678a17",
+      "publication": "published",
+      "title": "Bertamu dengan hormat, pulang dengan cerita",
+      "slug": "bertamu-dengan-hormat-pulang-dengan-cerita",
+      "body": [
+        {
+          "type": "heading",
+          "level": 2,
+          "children": [
+            {
+              "type": "text",
+              "text": "Datang sebagai tamu, bukan pemilik cerita"
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "children": [
+            {
+              "type": "text",
+              "text": "Sebuah rumah, halaman, atau ruang berkumpul mungkin terlihat menarik bagi pengunjung. Bagi orang yang tinggal di sana, tempat yang sama adalah bagian dari kehidupan sehari-hari. Perbedaan sudut pandang ini penting untuk diingat sebelum mengangkat kamera atau melangkah lebih dekat. Tulisan ini adalah inspirasi tentang sikap bertamu, bukan penjelasan aturan adat komunitas tertentu."
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "children": [
+            {
+              "type": "text",
+              "text": "Mulailah dengan memperkenalkan maksud secara sederhana dan bertanya apakah kehadiranmu diterima. Jawaban yang ragu atau penolakan tidak perlu diperdebatkan. Tidak semua ruang harus bisa dimasuki, dan tidak setiap orang berkewajiban menjelaskan hidupnya kepada pengunjung. Kadang pengalaman yang paling bermakna justru berupa kesediaan untuk berhenti di batas yang telah disampaikan."
+            }
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 2,
+          "children": [
+            {
+              "type": "text",
+              "text": "Mendengarkan tanpa mengambil alih"
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "children": [
+            {
+              "type": "text",
+              "text": "Saat seseorang bersedia bercerita, dengarkan kata-kata yang ia gunakan. Jangan buru-buru mengubah satu percakapan menjadi gambaran seluruh masyarakat. Jika ingin menulis kembali cerita tersebut, tanyakan apakah boleh dibagikan dan bagian mana yang sebaiknya tetap pribadi. Foto bangunan pun tidak otomatis memberi izin untuk memotret penghuni, kegiatan, atau bagian rumah yang lebih tertutup."
+            }
+          ]
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            [
+              {
+                "type": "text",
+                "text": "Tanyakan aturan setempat kepada orang yang berwenang menjelaskannya."
+              }
+            ],
+            [
+              {
+                "type": "text",
+                "text": "Mintalah izin terpisah untuk masuk, memotret, dan membagikan cerita."
+              }
+            ],
+            [
+              {
+                "type": "text",
+                "text": "Terima jawaban tidak tanpa berusaha mencari jalan lain untuk melewati batas."
+              }
+            ]
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 2,
+          "children": [
+            {
+              "type": "text",
+              "text": "Catatan sumber dan batasan"
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "children": [
+            {
+              "type": "text",
+              "text": "Artikel ini merupakan contoh inspirasi orisinal untuk portfolio Jelajah Lokal. Foto TIORHISTA R di Pexels digunakan sebagai ilustrasi rumah tradisional dan ruang hidup, bukan laporan kunjungan atau uraian adat. Tidak ada aturan komunitas, jadwal kegiatan, izin akses, atau riwayat pemeriksaan lapangan yang diklaim di sini."
+            }
+          ]
+        }
+      ],
+      "excerpt": "Rasa ingin tahu bukan alasan untuk memasuki semua ruang. Inspirasi bertamu, meminta izin, dan mendengarkan tanpa menganggap keseharian warga sebagai tontonan.",
+      "metaDescription": "Inspirasi bertamu dengan hormat di ruang budaya: meminta izin, menghargai batas pribadi, dan mendengarkan cerita tanpa membuat asumsi.",
+      "tags": [
+        "etika bertamu",
+        "ruang budaya",
+        "perjalanan sadar"
+      ],
+      "categoryDocumentId": "f4896118-adc2-5e8f-a7ef-d200258c8311",
+      "authorDocumentId": "fb7c0f0c-b4b5-5f97-9499-f6d444c1a72a",
+      "coverMediaDocumentId": "39490672-c7ed-5c45-8149-997307577466",
+      "coverAlt": "Rumah beratap rumbia dan pagar bambu di tepi kolam dengan pepohonan",
+      "coverCaption": "Rumah dan kolam sebagai ilustrasi ruang hidup; foto tidak membuktikan izin kunjungan.",
+      "imageCredit": "TIORHISTA R / Pexels",
+      "imageSourceUrl": "https://www.pexels.com/photo/traditional-village-houses-with-thatch-roofs-28881743/",
+      "sourceLinks": [
+        {
+          "label": "Sumber foto ilustrasi — Pexels",
+          "url": "https://www.pexels.com/photo/traditional-village-houses-with-thatch-roofs-28881743/",
+          "accessedAt": null
+        },
+        {
+          "label": "Lisensi Pexels",
+          "url": "https://www.pexels.com/license/",
+          "accessedAt": null
+        }
+      ],
+      "informationCheckedAt": null,
+      "operationalClaims": false,
+      "regionLabel": "Edisi contoh · Indonesia",
+      "featured": false
+    },
+    {
+      "documentId": "4a040414-85b8-56c5-9bb5-7deb21675c48",
+      "publication": "published",
+      "title": "Satu pagi, jalan kecil, banyak hal baru",
+      "slug": "satu-pagi-jalan-kecil-banyak-hal-baru",
+      "body": [
+        {
+          "type": "heading",
+          "level": 2,
+          "children": [
+            {
+              "type": "text",
+              "text": "Satu fokus sudah cukup"
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "children": [
+            {
+              "type": "text",
+              "text": "Untuk membayangkan perjalanan singkat, kita tidak selalu membutuhkan rangkaian tujuan yang panjang. Pilih satu fokus: melihat perubahan cahaya, memperhatikan bentuk bangunan, atau mendengarkan suasana dari tempat yang memang dapat dikunjungi. Foto jalan kecil di samping sawah menjadi pemantik gagasan ini. Ia bukan peta perjalanan dan tidak menjelaskan kondisi jalan pada saat pembaca berangkat."
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "children": [
+            {
+              "type": "text",
+              "text": "Agenda yang sederhana memberi ruang untuk menyesuaikan langkah. Ketika suatu tempat tidak bisa diakses atau suasana terasa kurang cocok, tidak ada kewajiban menuntaskan rencana semula. Mengubah tujuan atau kembali lebih awal bukan kegagalan perjalanan. Yang ingin dicari adalah perhatian yang lebih utuh, bukan bukti bahwa semua titik dalam daftar telah berhasil didatangi."
+            }
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 2,
+          "children": [
+            {
+              "type": "text",
+              "text": "Beri ruang untuk berhenti"
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "children": [
+            {
+              "type": "text",
+              "text": "Berhenti dapat berarti mengamati dari tempat yang tidak menghalangi orang lain, menulis satu kalimat di buku catatan, atau sekadar menyimpan kesan tanpa kamera. Hindari berdiri di jalur kerja dan jangan menganggap bahu jalan selalu sesuai untuk beristirahat. Periksa pilihan akses secara langsung sebelum berangkat; tulisan inspirasi tidak dapat menggantikan informasi dari pengelola atau warga setempat."
+            }
+          ]
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            [
+              {
+                "type": "text",
+                "text": "Pilih satu pertanyaan kecil untuk dibawa selama perjalanan."
+              }
+            ],
+            [
+              {
+                "type": "text",
+                "text": "Sisakan ruang dalam rencana untuk berubah pikiran dan beristirahat."
+              }
+            ],
+            [
+              {
+                "type": "text",
+                "text": "Pisahkan catatan suasana dari klaim tentang akses, cuaca, atau keselamatan."
+              }
+            ]
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 2,
+          "children": [
+            {
+              "type": "text",
+              "text": "Catatan sumber dan batasan"
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "children": [
+            {
+              "type": "text",
+              "text": "Tulisan orisinal ini adalah contoh portfolio dan tidak berasal dari perjalanan lapangan penulis. Foto Tom Fisk di Pexels digunakan sebagai ilustrasi jalan pedesaan. Artikel tidak menyebut rute, waktu tempuh, jam buka, atau jaminan kondisi perjalanan, sehingga tidak menyamar sebagai panduan operasional yang sudah diperiksa."
+            }
+          ]
+        }
+      ],
+      "excerpt": "Perjalanan singkat tidak harus dipenuhi agenda. Inspirasi memilih satu arah, memberi ruang untuk berhenti, dan memperhatikan detail yang dekat.",
+      "metaDescription": "Inspirasi perjalanan singkat dengan agenda sederhana: memilih satu fokus, mengamati jalan kecil, dan menyediakan ruang untuk berhenti.",
+      "tags": [
+        "perjalanan singkat",
+        "jalan kecil",
+        "mengamati"
+      ],
+      "categoryDocumentId": "8e20c1a8-a93a-5a36-b482-6c51fca55fe0",
+      "authorDocumentId": "fb7c0f0c-b4b5-5f97-9499-f6d444c1a72a",
+      "coverMediaDocumentId": "e41bbe27-3bd1-505e-b527-14a2cfcdb590",
+      "coverAlt": "Jalan kecil di samping sawah hijau, rumah, dan pohon kelapa",
+      "coverCaption": "Jalan pedesaan sebagai ilustrasi; artikel tidak menetapkan rute atau kondisi akses.",
+      "imageCredit": "Tom Fisk / Pexels",
+      "imageSourceUrl": "https://www.pexels.com/photo/view-of-rice-fields-1846335/",
+      "sourceLinks": [
+        {
+          "label": "Sumber foto ilustrasi — Pexels",
+          "url": "https://www.pexels.com/photo/view-of-rice-fields-1846335/",
+          "accessedAt": null
+        },
+        {
+          "label": "Lisensi Pexels",
+          "url": "https://www.pexels.com/license/",
+          "accessedAt": null
+        }
+      ],
+      "informationCheckedAt": null,
+      "operationalClaims": false,
+      "regionLabel": "Edisi contoh · Indonesia",
+      "featured": false
+    },
+    {
+      "documentId": "ec2e083a-aa9f-5962-b824-d859087fde51",
+      "publication": "published",
+      "title": "Melihat desa dari sudut yang berbeda",
+      "slug": "melihat-desa-dari-sudut-yang-berbeda",
+      "body": [
+        {
+          "type": "heading",
+          "level": 2,
+          "children": [
+            {
+              "type": "text",
+              "text": "Gambar luas, cerita yang belum lengkap"
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "children": [
+            {
+              "type": "text",
+              "text": "Foto dari atas memperlihatkan hubungan yang sulit dilihat dari satu titik di tanah. Rumah, petak lahan, dan pepohonan tampak berdekatan dalam satu bentang. Namun pandangan luas bukan berarti pengetahuan kita lengkap. Sebuah gambar tidak menjelaskan siapa yang tinggal di sana, bagaimana kegiatan sehari-hari berlangsung, atau ruang mana yang boleh didatangi pengunjung. Rasa ingin tahu sebaiknya dimulai dari kesadaran akan batas tersebut."
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "children": [
+            {
+              "type": "text",
+              "text": "Saat melihat lanskap, coba perhatikan hubungan antarbagian tanpa buru-buru memberi label. Di mana warna berubah? Bagaimana garis jalan atau batas lahan membentuk pandangan? Pertanyaan semacam ini dapat melatih perhatian tanpa menjadikan warga sebagai objek penilaian. Kita bisa menikmati bentuk dan suasana sekaligus mengakui bahwa sebagian besar cerita tempat itu masih belum kita ketahui."
+            }
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 2,
+          "children": [
+            {
+              "type": "text",
+              "text": "Dekat tidak berarti bebas masuk"
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "children": [
+            {
+              "type": "text",
+              "text": "Jika gagasan perjalanan berkembang menjadi rencana kunjungan, carilah informasi langsung dari pihak yang tepat. Jangan menafsirkan foto stok sebagai tanda bahwa rumah, kebun, atau jalan di dalamnya tersedia untuk wisata. Privasi dan pekerjaan sehari-hari tetap perlu dihormati. Mendekati tempat dengan sopan juga berarti menerima bahwa sebagian cerita tidak harus dibagikan kepada kita."
+            }
+          ]
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            [
+              {
+                "type": "text",
+                "text": "Tuliskan hal yang terlihat dan pisahkan dari dugaan yang belum diketahui."
+              }
+            ],
+            [
+              {
+                "type": "text",
+                "text": "Jangan memakai foto untuk menyimpulkan izin akses atau kehidupan seluruh warga."
+              }
+            ],
+            [
+              {
+                "type": "text",
+                "text": "Pilih percakapan yang disetujui, bukan pengamatan terhadap ruang pribadi."
+              }
+            ]
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 2,
+          "children": [
+            {
+              "type": "text",
+              "text": "Catatan sumber dan batasan"
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "children": [
+            {
+              "type": "text",
+              "text": "Ini adalah inspirasi orisinal untuk portfolio Jelajah Lokal, bukan laporan suatu desa. Foto Tom Fisk di Pexels menjadi rujukan visual saja. Tidak ada wilayah wisata yang ditetapkan, informasi operasional yang diverifikasi, atau riwayat kunjungan penulis yang diklaim dalam artikel ini."
+            }
+          ]
+        }
+      ],
+      "excerpt": "Di balik bentang yang indah ada ruang hidup. Inspirasi melihat lanskap desa dengan rasa ingin tahu, tanpa mereduksi keseharian warga menjadi latar perjalanan.",
+      "metaDescription": "Inspirasi melihat lanskap desa sebagai ruang hidup: mengamati hubungan rumah dan lahan, menghormati privasi, dan menghindari asumsi.",
+      "tags": [
+        "lanskap desa",
+        "ruang hidup",
+        "wisata lokal"
+      ],
+      "categoryDocumentId": "8e20c1a8-a93a-5a36-b482-6c51fca55fe0",
+      "authorDocumentId": "fb7c0f0c-b4b5-5f97-9499-f6d444c1a72a",
+      "coverMediaDocumentId": "af9f270e-8bbf-5467-95ca-65ae0e7ccc5b",
+      "coverAlt": "Permukiman beratap merah di antara sawah dan pepohonan dilihat dari atas",
+      "coverCaption": "Lanskap desa dari foto stok; tidak menjadi bukti kunjungan atau pemetaan akses.",
+      "imageCredit": "Tom Fisk / Pexels",
+      "imageSourceUrl": "https://www.pexels.com/photo/drone-footage-of-village-near-cropland-1547429/",
+      "sourceLinks": [
+        {
+          "label": "Sumber foto ilustrasi — Pexels",
+          "url": "https://www.pexels.com/photo/drone-footage-of-village-near-cropland-1547429/",
+          "accessedAt": null
+        },
+        {
+          "label": "Lisensi Pexels",
+          "url": "https://www.pexels.com/license/",
+          "accessedAt": null
+        }
+      ],
+      "informationCheckedAt": null,
+      "operationalClaims": false,
+      "regionLabel": "Edisi contoh · Indonesia",
+      "featured": false
+    },
+    {
+      "documentId": "38d077cf-66fe-58df-85a3-d0c122fbb8e7",
+      "publication": "draft",
+      "title": "Menyusun perjalanan yang memberi ruang",
+      "slug": "draft-menyusun-perjalanan-yang-memberi-ruang",
+      "body": [
+        {
+          "type": "heading",
+          "level": 2,
+          "children": [
+            {
+              "type": "text",
+              "text": "Rencana sebagai pegangan, bukan tuntutan"
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "children": [
+            {
+              "type": "text",
+              "text": "Rencana perjalanan membantu kita memilih perhatian, tetapi tidak harus mengatur setiap menit. Draft ini mengembangkan gagasan tentang sebuah perjalanan pendek yang memberi ruang untuk berhenti dan menyesuaikan arah. Pembaca dapat mulai dengan satu tujuan belajar yang sederhana, misalnya mengamati lanskap atau memahami sebuah sajian. Belum ada lokasi, rute, atau layanan wisata yang dipilih dalam tulisan ini."
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "children": [
+            {
+              "type": "text",
+              "text": "Menyusun agenda yang lentur berarti menerima bahwa keadaan nyata dapat berbeda dari bayangan. Sebuah tempat mungkin tidak dapat dikunjungi, seseorang mungkin tidak ingin berbicara, atau kita sendiri mungkin ingin mengakhiri perjalanan lebih cepat. Perubahan itu tidak perlu ditutupi dalam catatan. Ia dapat menjadi bagian dari cerita yang lebih jujur tentang cara kita berhubungan dengan tempat dan orang lain."
+            }
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 2,
+          "children": [
+            {
+              "type": "text",
+              "text": "Hal yang ingin dibawa pulang"
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "children": [
+            {
+              "type": "text",
+              "text": "Sebelum berangkat, pilih satu pertanyaan untuk dipikirkan, bukan daftar panjang hasil yang harus didapat. Setelah pulang, tuliskan pengamatan yang benar-benar terjadi dan tandai bagian yang masih berupa dugaan. Tidak setiap perjalanan membutuhkan rekomendasi publik. Beberapa kesan cukup disimpan untuk diri sendiri, terlebih jika berkaitan dengan percakapan atau ruang pribadi yang tidak diizinkan untuk dibagikan."
+            }
+          ]
+        },
+        {
+          "type": "list",
+          "ordered": false,
+          "items": [
+            [
+              {
+                "type": "text",
+                "text": "Sisakan kesempatan untuk bertanya dan mendengarkan tanpa terburu-buru."
+              }
+            ],
+            [
+              {
+                "type": "text",
+                "text": "Hormati keputusan orang yang tidak ingin difoto atau dikutip."
+              }
+            ],
+            [
+              {
+                "type": "text",
+                "text": "Periksa informasi akses secara langsung ketika lokasi akhirnya dipilih."
+              }
+            ]
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 2,
+          "children": [
+            {
+              "type": "text",
+              "text": "Status draft dan sumber"
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "children": [
+            {
+              "type": "text",
+              "text": "Tulisan orisinal ini adalah contoh draft privat untuk demo editorial portfolio dan belum diperintahkan untuk terbit. Foto Tom Fisk di Pexels hanya menjadi ilustrasi. Tidak ada kunjungan, harga, jadwal, atau pemeriksaan fakta operasional yang diklaim. Usulan metadata nantinya tetap harus ditinjau dan diterapkan secara sengaja sebelum publikasi terpisah."
+            }
+          ]
+        }
+      ],
+      "excerpt": "Draft inspirasi tentang rencana perjalanan yang lentur: mengurangi agenda, menghargai batas tempat, dan mencatat kesan secara jujur.",
+      "metaDescription": "Draft inspirasi menyusun perjalanan yang lentur dengan satu fokus, jeda yang cukup, dan catatan yang membedakan pengamatan dari asumsi.",
+      "tags": [
+        "rencana perjalanan",
+        "perjalanan pelan",
+        "catatan perjalanan"
+      ],
+      "categoryDocumentId": "8e20c1a8-a93a-5a36-b482-6c51fca55fe0",
+      "authorDocumentId": "fb7c0f0c-b4b5-5f97-9499-f6d444c1a72a",
+      "coverMediaDocumentId": "e41bbe27-3bd1-505e-b527-14a2cfcdb590",
+      "coverAlt": "Jalan pedesaan di samping sawah dan rumah dengan pohon kelapa",
+      "coverCaption": "Foto ilustrasi untuk draft; tidak mendokumentasikan perjalanan yang telah dilakukan.",
+      "imageCredit": "Tom Fisk / Pexels",
+      "imageSourceUrl": "https://www.pexels.com/photo/view-of-rice-fields-1846335/",
+      "sourceLinks": [
+        {
+          "label": "Sumber foto ilustrasi — Pexels",
+          "url": "https://www.pexels.com/photo/view-of-rice-fields-1846335/",
+          "accessedAt": null
+        },
+        {
+          "label": "Lisensi Pexels",
+          "url": "https://www.pexels.com/license/",
+          "accessedAt": null
+        }
+      ],
+      "informationCheckedAt": null,
+      "operationalClaims": false,
+      "regionLabel": "Edisi contoh · Indonesia",
+      "featured": false
+    }
+  ]
+}

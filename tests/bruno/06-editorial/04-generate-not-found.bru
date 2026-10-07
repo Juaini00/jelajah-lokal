@@ -1,0 +1,29 @@
+meta {
+  name: POST generate for a nonexistent article returns 404
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{baseUrl}}/api/admin/editorial/generate
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Origin: {{apiPublicOrigin}}
+  X-CSRF-Token: {{adminCsrfToken}}
+}
+
+body:json {
+  {
+    "articleDocumentId": "00000000-0000-0000-0000-000000000000",
+    "idempotencyKey": "{{idemKeyNotFound}}"
+  }
+}
+
+assert {
+  res.status: eq 404
+  res.body.error.code: eq ARTICLE_NOT_FOUND
+}

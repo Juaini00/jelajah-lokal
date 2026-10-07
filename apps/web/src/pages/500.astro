@@ -1,0 +1,8 @@
+---
+import SiteLayout from '../layouts/SiteLayout.astro';
+import ErrorState from '../components/ErrorState.astro';
+Astro.response.status = 503;
+---
+<SiteLayout title="Gangguan sementara — Jelajah Lokal" description="Layanan konten belum dapat dihubungi." path={Astro.url.pathname} noindex>
+  <ErrorState status={503} retryUrl="/" />
+</SiteLayout>
