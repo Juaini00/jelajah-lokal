@@ -1,0 +1,4 @@
+# The admin build is git-ignored but must ship with the API.
+!admin_dist/
+tests/
+.ruff_cache/

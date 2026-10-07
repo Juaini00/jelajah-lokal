@@ -16,7 +16,8 @@ from app.errors import register_errors
 from app.mcp_server import build_mcp_app, mcp
 from app.routers import admin_auth, admin_content, admin_editorial, public
 
-ADMIN_DIST = Path(__file__).resolve().parents[2] / 'admin' / 'dist'
+# Built by `pnpm --filter admin build` (vite outDir); lives inside apps/api so `fastapi deploy` uploads it.
+ADMIN_DIST = Path(__file__).resolve().parents[1] / 'admin_dist'
 
 
 class AdminStatic(StaticFiles):

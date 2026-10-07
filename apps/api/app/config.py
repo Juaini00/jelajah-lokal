@@ -6,11 +6,14 @@ from urllib.parse import urlsplit
 from pydantic import Field, SecretStr, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-ROOT = Path(__file__).resolve().parents[3]
+# Local checkouts read the monorepo root .env (apps/api/app/config.py → repo root); deployed images have no such
+# ancestor and rely on platform environment variables only.
+_parents = Path(__file__).resolve().parents
+ENV_FILE = _parents[3] / '.env' if len(_parents) > 3 else None
 
 
 class Settings(BaseSettings):
-    model_config = SettingsConfigDict(env_file=ROOT / '.env', extra='ignore', case_sensitive=False)
+    model_config = SettingsConfigDict(env_file=ENV_FILE, extra='ignore', case_sensitive=False)
     environment: Literal['development', 'test', 'staging', 'production'] = 'development'
     database_url: SecretStr
     database_direct_url: SecretStr = SecretStr('')
