@@ -36,8 +36,7 @@ export function Articles({ api, openId, onOpened, onDirty }: { api: Api; openId:
   async function save() {
     if (!draft || !saved) return
     const patch: Record<string, unknown> = { revision: saved.revision }
-    writingKeys.forEach(key => { if (JSON.stringify(draft[key]) !== JSON.stringify(saved[key])) patch[key] = draft[key] })
-    if (Object.keys(patch).length === 1) return
+    writingKeys.forEach(key => { patch[key] = draft[key] })
     setPending(true); setError(null); setStatus('')
     try { adopt((await api<{ data: Article }>(`/articles/${draft.documentId}`, { method: 'PATCH', body: JSON.stringify(patch) })).data); setStatus('Perubahan disimpan ke draft. Versi live tidak berubah.'); await collection.reload() } catch (e) { setError(e) } finally { setPending(false) }
   }
@@ -78,7 +77,7 @@ export function Articles({ api, openId, onOpened, onDirty }: { api: Api; openId:
           {draft.sourceLinks.map((source, i) => <div className="source-row" key={i}><label>Nama sumber {i + 1}<input value={source.label} onChange={e => update('sourceLinks', draft.sourceLinks.map((s, j) => j === i ? { ...s, label: e.target.value } : s))} /></label><label>URL sumber {i + 1}<input type="url" value={source.url} onChange={e => update('sourceLinks', draft.sourceLinks.map((s, j) => j === i ? { ...s, url: e.target.value } : s))} /></label><label>Tanggal akses {i + 1}<input type="date" value={source.accessedAt?.slice(0, 10) || ''} onChange={e => update('sourceLinks', draft.sourceLinks.map((s, j) => j === i ? { ...s, accessedAt: e.target.value || null } : s))} /></label><button type="button" className="secondary danger" onClick={() => update('sourceLinks', draft.sourceLinks.filter((_, j) => j !== i))}>Hapus sumber</button></div>)}<button type="button" className="secondary" onClick={() => update('sourceLinks', [...draft.sourceLinks, { label: '', url: '', accessedAt: null }])}>Tambah sumber</button>
         </fieldset></div>
         <div className="editor-actions"><button disabled={pending || !dirty || !!latest} onClick={() => void save()}>Simpan draft</button><button className="secondary" disabled={pending || dirty || !!latest} onClick={() => setConfirmation('publish')}>{saved?.publishedAt ? 'Terbitkan draft terbaru' : 'Terbitkan'}</button>{saved?.publishedAt ? <button className="secondary danger" disabled={pending || dirty} onClick={() => setConfirmation('unpublish')}>Tarik dari publik</button> : <button className="secondary danger" disabled={pending} onClick={() => setConfirmation('delete')}>Hapus draft</button>}</div>
-        <p className="hint">Simpan dahulu sebelum publikasi. Gemini tidak diperlukan. Server memvalidasi semua syarat publikasi.</p>
+        <p className="hint">{dirty ? 'Anda punya perubahan belum disimpan — simpan draft untuk mengaktifkan tombol Terbitkan.' : 'Gemini tidak diperlukan untuk terbitkan. Server memvalidasi semua syarat publikasi saat tombol ditekan.'}</p>
         {confirmation && <div className="notice confirmation" role="alert"><strong>{confirmation === 'publish' ? `Terbitkan versi tersimpan r${saved?.revision} ke publik?` : confirmation === 'unpublish' ? 'Tarik artikel dari semua halaman publik dan sitemap?' : 'Hapus draft secara permanen?'}</strong><p>{confirmation === 'delete' ? 'Isian lokal juga akan dibuang. Tindakan ini tidak dapat dibatalkan.' : 'Ini tindakan editorial manual, bukan bagian dari Assistant.'}</p><div className="actions"><button disabled={pending} onClick={() => void execute(confirmation)}>Ya, {confirmation === 'publish' ? 'terbitkan' : confirmation === 'unpublish' ? 'tarik dari publik' : 'hapus draft'}</button><button className="secondary" disabled={pending} onClick={() => setConfirmation(null)}>Batal</button></div></div>}
       </>}
     </section></div></>

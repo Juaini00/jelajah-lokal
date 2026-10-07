@@ -2,10 +2,15 @@
 .admin-shell {
   display: grid;
   grid-template-columns: 240px 1fr;
+  align-items: start;
   min-height: 100vh;
 }
 
 .admin-nav {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
   background: var(--surface);
   border-right: 1px solid var(--border);
   display: flex;
