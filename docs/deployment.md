@@ -1,8 +1,27 @@
 # Deployment
 
-## Status
+## Status (live since 2026-10-07)
 
-**No hosting account is currently authenticated for this project.** `uv run --directory apps/api fastapi cloud whoami` previously returned `No credentials found` (see `docs/implementation-status.md`). No FastAPI Cloud project, Astro hosting target, or Neon project has been provisioned yet. This document describes the real CLI steps to follow once an owner-approved account exists; it does not claim any URL, project, or deployment already exists. Do not invent deployment URLs, project names, or dashboard screenshots.
+| Part | Host | URL |
+|---|---|---|
+| API + admin (`/admin/`) + MCP (`/mcp`) | FastAPI Cloud app `jelajah-lokal` (team Juaini, region us-east-1) | https://jelajah-lokal.fastapicloud.dev |
+| Public site (Astro SSR) | Vercel project `juainiis-projects/jelajah-lokal`, root `apps/web`, auto-deploys `main` from GitHub `Juaini00/jelajah-lokal` | https://jelajah-lokal.vercel.app |
+| Database | Neon (ap-southeast-1); app uses the pooled URL, migrations/seed the direct URL | — |
+
+Observed after deploy: `/healthz` 200, `/readyz` 200, public articles API returns the 5 seeded guides, admin login sets `jelajah_session` Secure/HttpOnly/SameSite=Strict, Vercel pages 200 with `index, follow` and canonical on `jelajah-lokal.vercel.app`, unknown slug 404.
+
+Production secrets generated for this deploy (`API_CONTENT_TOKEN`, `ADMIN_SESSION_SECRET`, `MCP_API_KEY`) and the production admin login live only in `.private/` (git-ignored) and in the platforms' secret env vars.
+
+**Known latency:** API (us-east-1) talks to Neon in ap-southeast-1, so DB-bound requests take seconds. Moving the Neon project to a US East region (or the app closer to the DB) is the fix.
+
+### Redeploy
+
+```bash
+pnpm --filter admin build                         # writes apps/api/admin_dist (git-ignored, shipped via apps/api/.fastapicloudignore)
+uv run --directory apps/api fastapi deploy        # API + admin
+git push origin main                              # Vercel rebuilds the public site
+```
+Env vars: `uv run --directory apps/api fastapi cloud env list` and `vercel env ls`. Migrations: run `alembic upgrade head` with `DATABASE_URL` set to the Neon **direct** URL (host without `-pooler`).
 
 ## Backend: FastAPI Cloud
 
@@ -44,24 +63,24 @@ using `DATABASE_DIRECT_URL` configured for the Neon direct (non-pooled) connecti
 
 ## Frontend: Astro reader site (`apps/web`)
 
-No owner-approved hosting target or account has been selected (per `docs/implementation-status.md`). `apps/web` uses `@astrojs/node` in standalone mode, so it produces a portable Node server build:
+Hosted on Vercel. `astro.config.mjs` picks `@astrojs/vercel` when `VERCEL=1` (set by Vercel builds) and the standalone `@astrojs/node` adapter everywhere else, so local runs and the Dockerfile keep working:
 
 ```bash
 pnpm --filter apps-web build
 node apps/web/dist/server/entry.mjs
 ```
 
-This runs anywhere Node 24.19.0 is available (container, VM, or a Node-compatible PaaS). The concrete hosting provider and its deploy command are an open decision; do not fabricate a provider-specific command (e.g. a specific PaaS CLI) until one is chosen. Required runtime environment variables for the server build: `SITE_URL`, `API_URL`, `API_CONTENT_TOKEN`, `API_REQUEST_TIMEOUT_MS`, `HOST`, `PORT`, `NODE_ENV=production`.
+Vercel project settings: root directory `apps/web`, framework Astro, Node 24.x, include files outside the root (pnpm workspace). Production env vars: `SITE_URL`, `API_URL`, `API_CONTENT_TOKEN` (sensitive; must equal the API's value), `API_REQUEST_TIMEOUT_MS`, `ENVIRONMENT=production` (enables indexing).
 
 ## Admin editor (`apps/admin`)
 
 Production admin is **not** deployed as a standalone static site. It is built and served by the FastAPI backend at `/admin/` so cookie-based mutations remain same-origin (see `docs/architecture.md`):
 
 ```bash
-pnpm --filter admin build   # vite base /admin/, output in apps/admin/dist
+pnpm --filter admin build   # vite base /admin/, output in apps/api/admin_dist
 ```
 
-The backend owner integrates serving `apps/admin/dist` as static files under `/admin/` as part of the FastAPI Cloud deploy; the exact static-mount wiring is backend implementation scope, not a separate hosting step.
+`apps/api/app/main.py` mounts `apps/api/admin_dist` at `/admin/` with an SPA fallback. The folder is git-ignored but re-included for upload by `apps/api/.fastapicloudignore`, so always build the admin before `fastapi deploy`.
 
 ## Media: Cloudinary
 
@@ -77,7 +96,5 @@ No separate deployment step — Cloudinary is a managed SaaS accessed via `CLOUD
 
 ## Open items
 
-- FastAPI Cloud account: not authenticated. Requires owner login via `fastapi cloud login`.
-- Astro hosting provider: not chosen.
-- Neon project: not provisioned; no production connection strings exist yet.
-- Once all three exist, this document's command sequences should be executed in order (Neon → migrate → FastAPI Cloud deploy → Astro host deploy) and the real resulting URLs recorded in `docs/verification.md`, not here.
+- Custom domain (optional): `fastapi cloud domains` / Vercel domains; update `API_PUBLIC_URL`, `ADMIN_ALLOWED_ORIGINS`, `MCP_ALLOWED_HOSTS` and `SITE_URL` accordingly.
+- Region alignment between FastAPI Cloud and Neon (see Known latency).
