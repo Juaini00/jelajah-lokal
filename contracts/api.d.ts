@@ -354,6 +354,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/admin/editorial/review": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Editorial Review */
+        post: operations["editorial_review_api_admin_editorial_review_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/admin/editorial/apply": {
         parameters: {
             query?: never;
@@ -853,6 +870,15 @@ export interface components {
              */
             deleted: true;
         };
+        /** EditorialReview */
+        EditorialReview: {
+            /** Summary */
+            summary: string;
+            /** Claims */
+            claims: components["schemas"]["ReviewClaim"][];
+            /** Gaps */
+            gaps: components["schemas"]["ReviewGap"][];
+        };
         /** GenerateInput */
         GenerateInput: {
             /**
@@ -1189,6 +1215,44 @@ export interface components {
             type: "quote";
             /** Children */
             children: (components["schemas"]["TextInline"] | components["schemas"]["LinkInline"])[];
+        };
+        /** ReviewClaim */
+        ReviewClaim: {
+            /** Quote */
+            quote: string;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "harga" | "jadwal" | "kontak" | "lokasi" | "lainnya";
+            /** Note */
+            note: string;
+        };
+        /** ReviewGap */
+        ReviewGap: {
+            /** Topic */
+            topic: string;
+            /** Suggestion */
+            suggestion: string;
+        };
+        /** ReviewResponse */
+        ReviewResponse: {
+            /**
+             * Requestid
+             * Format: uuid
+             */
+            requestId: string;
+            /**
+             * Articledocumentid
+             * Format: uuid
+             */
+            articleDocumentId: string;
+            /** Revisionfingerprint */
+            revisionFingerprint: string;
+            result: components["schemas"]["EditorialReview"];
+            /** Cachehit */
+            cacheHit: boolean;
+            quota: components["schemas"]["QuotaDTO"];
         };
         /** RevisionInput */
         RevisionInput: {
@@ -2127,6 +2191,39 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["GenerateResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    editorial_review_api_admin_editorial_review_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GenerateInput"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReviewResponse"];
                 };
             };
             /** @description Validation Error */

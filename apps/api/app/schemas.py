@@ -31,6 +31,8 @@ Slug = Annotated[str, Field(pattern=r'^[a-z0-9]+(?:-[a-z0-9]+)*$', max_length=12
 
 
 class TextInline(DTO):
+    # Runs are fragments of one sentence: stripping would glue "Saya " + **suka** + " pantai" into "Sayasukapantai".
+    model_config = ConfigDict(extra='forbid', str_strip_whitespace=False)
     type: Literal['text']
     text: str = Field(max_length=20000)
     bold: bool = False
@@ -366,6 +368,35 @@ class GenerateResponse(DTO):
     quota: QuotaDTO
 
 
+class ReviewClaim(DTO):
+    quote: str = Field(min_length=3, max_length=300)
+    kind: Literal['harga', 'jadwal', 'kontak', 'lokasi', 'lainnya']
+    note: str = Field(min_length=1, max_length=240)
+    _safe = field_validator('quote', 'note')(safe_text)
+
+
+class ReviewGap(DTO):
+    topic: str = Field(min_length=2, max_length=80)
+    suggestion: str = Field(min_length=1, max_length=280)
+    _safe = field_validator('topic', 'suggestion')(safe_text)
+
+
+class EditorialReview(DTO):
+    summary: str = Field(min_length=1, max_length=400)
+    claims: list[ReviewClaim] = Field(max_length=6)
+    gaps: list[ReviewGap] = Field(max_length=4)
+    _safe = field_validator('summary')(safe_text)
+
+
+class ReviewResponse(DTO):
+    requestId: UUID
+    articleDocumentId: UUID
+    revisionFingerprint: str
+    result: EditorialReview
+    cacheHit: bool
+    quota: QuotaDTO
+
+
 class ApplyResponse(DTO):
     requestId: UUID
     articleDocumentId: UUID
@@ -381,11 +412,17 @@ class UsageResponse(QuotaDTO):
     busy: bool
 
 
+class FieldIssue(DTO):
+    field: str
+    message: str
+
+
 class ErrorDetail(DTO):
     code: str
     message: str
     requestId: str
     retryable: bool
+    fields: list[FieldIssue] | None = None
 
 
 class ErrorEnvelope(DTO):

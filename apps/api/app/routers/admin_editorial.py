@@ -5,7 +5,7 @@ from app.config import Settings, get_settings
 from app.db import get_db
 from app.deps import require_csrf
 from app.models import Principal
-from app.schemas import ApplyInput, ApplyResponse, ArticleDraft, Data, GenerateInput, GenerateResponse, UsageResponse
+from app.schemas import ApplyInput, ApplyResponse, ArticleDraft, Data, GenerateInput, GenerateResponse, ReviewResponse, UsageResponse
 from app.services import content, editorial
 from app.services.gemini import GeminiClient, get_gemini_client
 
@@ -31,6 +31,17 @@ async def editorial_generate(
     principal: Principal = Depends(require_csrf),
 ):
     return await editorial.generate(db, settings, client, principal, payload)
+
+
+@router.post('/review', response_model=ReviewResponse)
+async def editorial_review(
+    payload: GenerateInput,
+    db: AsyncSession = Depends(get_db),
+    settings: Settings = Depends(get_settings),
+    client: GeminiClient = Depends(get_gemini_client),
+    principal: Principal = Depends(require_csrf),
+):
+    return await editorial.review(db, settings, client, principal, payload)
 
 
 @router.post('/apply', response_model=ApplyResponse)

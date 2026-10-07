@@ -1,8 +1,11 @@
 import hashlib
+from collections.abc import Callable
+from dataclasses import dataclass
 from datetime import date, datetime, timedelta, timezone
 from uuid import UUID
 
 from fastapi import Depends
+from pydantic import BaseModel, ValidationError
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -10,7 +13,7 @@ from app.config import Settings, get_settings
 from app.db import Session
 from app.errors import AppError
 from app.models import Article, DailyQuota, EditorialRequest, GlobalLease, Principal, ValidatedCache
-from app.schemas import ApplyInput, ApplyResponse, GeneratedMetadata, GenerateInput, GenerateResponse, QuotaDTO, UsageResponse, body_text, meaningful_words
+from app.schemas import ApplyInput, ApplyResponse, EditorialReview, GeneratedMetadata, GenerateInput, GenerateResponse, QuotaDTO, ReviewResponse, UsageResponse, body_text, meaningful_words
 from app.services.content import draft_dto, load_owned_article
 from app.services.gemini import (
     GeminiClient,
@@ -23,6 +26,7 @@ from app.services.gemini import (
 
 PROVIDER = 'gemini'
 SCHEMA_VERSION = '1'
+REVIEW_SCHEMA_VERSION = 'review-1'
 MIN_WORDS = 100
 PRECHECK_CHARS = 7000
 LEASE_RESOURCE = 'gemini'
@@ -41,10 +45,39 @@ def revision_fingerprint(article: Article) -> str:
     return hashlib.sha256(f'{article.id}:{article.revision}'.encode('utf-8')).hexdigest()
 
 
-def input_hash(text: str, settings: Settings) -> str:
+def input_hash(text: str, model: str, prompt_version: str, schema_version: str) -> str:
     normalized = ' '.join(text.split())
-    payload = f'{normalized}|{settings.gemini_model}|id|{settings.ai_prompt_version}|{SCHEMA_VERSION}'
+    payload = f'{normalized}|{model}|id|{prompt_version}|{schema_version}'
     return hashlib.sha256(payload.encode('utf-8')).hexdigest()
+
+
+def _squash(value: str) -> str:
+    return ' '.join(value.split()).casefold()
+
+
+def ground_review(raw: dict, text: str) -> EditorialReview:
+    """Keep only claims quoted verbatim from the article (the model may not invent sentences), then validate."""
+    haystack = _squash(text)
+    claims = [
+        c for c in raw.get('claims') or []
+        if isinstance(c, dict) and isinstance(c.get('quote'), str) and 3 <= len(c['quote'].strip()) <= 300 and _squash(c['quote']) in haystack
+    ]
+    gaps = [g for g in raw.get('gaps') or [] if isinstance(g, dict)]
+    return EditorialReview.model_validate({'summary': raw.get('summary'), 'claims': claims[:6], 'gaps': gaps[:4]})
+
+
+@dataclass(frozen=True)
+class Task:
+    """One kind of AI call; all kinds share quota, the global lease, idempotency and the validated cache."""
+
+    schema_version: str
+    prompt_version: Callable[[Settings], str]
+    call: Callable[[GeminiClient, str], dict]
+    validate: Callable[[dict, str], BaseModel]
+
+
+METADATA = Task(SCHEMA_VERSION, lambda s: s.ai_prompt_version, lambda c, t: c.generate_metadata(t), lambda raw, _: GeneratedMetadata.model_validate(raw))
+REVIEW = Task(REVIEW_SCHEMA_VERSION, lambda s: s.ai_review_prompt_version, lambda c, t: c.generate_review(t), ground_review)
 
 
 async def usage(db: AsyncSession, settings: Settings) -> UsageResponse:
@@ -53,7 +86,8 @@ async def usage(db: AsyncSession, settings: Settings) -> UsageResponse:
     used = quota.used if quota else 0
     limit_calls = quota.limit_calls if quota else settings.ai_daily_limit
     lease = (await db.execute(select(GlobalLease).where(GlobalLease.resource == LEASE_RESOURCE))).scalar_one_or_none()
-    busy = bool(lease and lease.expires_at and lease.expires_at > datetime.now(timezone.utc))
+    # Same condition the reservation uses: a finished request releases ownership before the lease would expire.
+    busy = bool(lease and lease.owner_request_id is not None and lease.expires_at and lease.expires_at > datetime.now(timezone.utc))
     return UsageResponse(
         provider='gemini',
         enabled=settings.ai_enabled and bool(settings.gemini_model) and bool(settings.gemini_api_key.get_secret_value()),
@@ -70,13 +104,23 @@ def _require_enabled(settings: Settings) -> None:
         raise AppError('AI_NOT_CONFIGURED')
 
 
-async def generate(
-    db: AsyncSession,
-    settings: Settings,
-    client: GeminiClient,
-    principal: Principal,
-    payload: GenerateInput,
-) -> GenerateResponse:
+async def generate(db: AsyncSession, settings: Settings, client: GeminiClient, principal: Principal, payload: GenerateInput) -> GenerateResponse:
+    request_id, article_id, fingerprint, result, cache_hit, quota = await _run(db, settings, client, principal, payload, METADATA)
+    return GenerateResponse(requestId=request_id, articleDocumentId=article_id, revisionFingerprint=fingerprint, result=result, cacheHit=cache_hit, quota=quota)
+
+
+async def review(db: AsyncSession, settings: Settings, client: GeminiClient, principal: Principal, payload: GenerateInput) -> ReviewResponse:
+    """Read-only editorial check: flags verifiable claims and missing practical info. Never mutates the draft."""
+    request_id, article_id, fingerprint, result, cache_hit, quota = await _run(db, settings, client, principal, payload, REVIEW)
+    return ReviewResponse(requestId=request_id, articleDocumentId=article_id, revisionFingerprint=fingerprint, result=result, cacheHit=cache_hit, quota=quota)
+
+
+async def _quota(db: AsyncSession, settings: Settings) -> QuotaDTO:
+    current = await usage(db, settings)
+    return QuotaDTO(used=current.used, limit=current.limit, remaining=current.remaining)
+
+
+async def _run(db: AsyncSession, settings: Settings, client: GeminiClient, principal: Principal, payload: GenerateInput, task: Task):
     _require_enabled(settings)
     article = await load_owned_article(db, principal, payload.articleDocumentId)
     text = body_text(article.draft.get('body') or [])
@@ -91,7 +135,7 @@ async def generate(
     fingerprint = revision_fingerprint(article)
 
     if existing is not None:
-        if existing.article_id != article.id:
+        if existing.article_id != article.id or existing.schema_version != task.schema_version:
             raise AppError('IDEMPOTENCY_CONFLICT')
         if existing.status in ('reserved', 'running'):
             if existing.expires_at and existing.expires_at > datetime.now(timezone.utc):
@@ -100,18 +144,11 @@ async def generate(
         if existing.status in ('failed', 'expired'):
             raise AppError('AI_REQUEST_EXPIRED')
         if existing.status in ('succeeded', 'applied'):
-            quota = await usage(db, settings)
-            return GenerateResponse(
-                requestId=existing.id,
-                articleDocumentId=article.id,
-                revisionFingerprint=existing.revision_fingerprint,
-                result=GeneratedMetadata.model_validate(existing.result),
-                cacheHit=existing.cache_hit,
-                quota=QuotaDTO(used=quota.used, limit=quota.limit, remaining=quota.remaining),
-            )
+            return existing.id, article.id, existing.revision_fingerprint, task.validate(existing.result, text), existing.cache_hit, await _quota(db, settings)
         raise AppError('IDEMPOTENCY_CONFLICT')
 
-    cache_key = input_hash(text, settings)
+    prompt_version = task.prompt_version(settings)
+    cache_key = input_hash(text, settings.gemini_model, prompt_version, task.schema_version)
     cached = (await db.execute(select(ValidatedCache).where(ValidatedCache.key == cache_key))).scalar_one_or_none()
     now = datetime.now(timezone.utc)
     if cached is not None and cached.expires_at > now:
@@ -122,8 +159,8 @@ async def generate(
             input_hash=cache_key,
             revision_fingerprint=fingerprint,
             model=settings.gemini_model,
-            prompt_version=settings.ai_prompt_version,
-            schema_version=SCHEMA_VERSION,
+            prompt_version=prompt_version,
+            schema_version=task.schema_version,
             status='succeeded',
             result=cached.result,
             cache_hit=True,
@@ -131,15 +168,7 @@ async def generate(
         )
         db.add(request)
         await db.flush()
-        quota = await usage(db, settings)
-        return GenerateResponse(
-            requestId=request.id,
-            articleDocumentId=article.id,
-            revisionFingerprint=fingerprint,
-            result=GeneratedMetadata.model_validate(cached.result),
-            cacheHit=True,
-            quota=QuotaDTO(used=quota.used, limit=quota.limit, remaining=quota.remaining),
-        )
+        return request.id, article.id, fingerprint, task.validate(cached.result, text), True, await _quota(db, settings)
 
     # Reserve lease + quota in a short, independent transaction.
     async with Session() as reserve_db:
@@ -168,8 +197,8 @@ async def generate(
                 input_hash=cache_key,
                 revision_fingerprint=fingerprint,
                 model=settings.gemini_model,
-                prompt_version=settings.ai_prompt_version,
-                schema_version=SCHEMA_VERSION,
+                prompt_version=prompt_version,
+                schema_version=task.schema_version,
                 status='running',
                 quota_date=today_utc(),
             )
@@ -188,8 +217,7 @@ async def generate(
         tokens = client.count_tokens(text)
         if tokens > settings.ai_max_input_tokens:
             raise AppError('INPUT_TOO_LONG')
-        result = client.generate_metadata(text)
-        validated = GeneratedMetadata.model_validate(result)
+        validated = task.validate(task.call(client, text), text)
     except AppError:
         await _finish_failed(request_id, fence, 'INPUT_TOO_LONG')
         raise
@@ -199,7 +227,7 @@ async def generate(
     except GeminiRateLimited:
         await _finish_failed(request_id, fence, 'PROVIDER_RATE_LIMITED')
         raise AppError('PROVIDER_RATE_LIMITED')
-    except (GeminiInvalidOutput, Exception) as exc:
+    except (GeminiInvalidOutput, ValidationError, Exception) as exc:
         if isinstance(exc, GeminiProviderError):
             await _finish_failed(request_id, fence, 'AI_PROVIDER_ERROR')
             raise AppError('AI_PROVIDER_ERROR')
@@ -223,15 +251,7 @@ async def generate(
                 existing_cache.result = row.result
                 existing_cache.expires_at = expires
 
-    quota = await usage(db, settings)
-    return GenerateResponse(
-        requestId=request_id,
-        articleDocumentId=article.id,
-        revisionFingerprint=fingerprint,
-        result=validated,
-        cacheHit=False,
-        quota=QuotaDTO(used=quota.used, limit=quota.limit, remaining=quota.remaining),
-    )
+    return request_id, article.id, fingerprint, validated, False, await _quota(db, settings)
 
 
 async def _finish_failed(request_id: UUID, fence: int, error_code: str) -> None:
@@ -262,7 +282,8 @@ async def apply(db: AsyncSession, principal: Principal, payload: ApplyInput):
             draftRevision=request.applied_response['draftRevision'],
             selectedFields=request.applied_response['selectedFields'],
         )
-    if request.status != 'succeeded':
+    if request.status != 'succeeded' or request.schema_version != SCHEMA_VERSION:
+        # Review results are advisory only and can never be applied to a draft.
         raise AppError('IDEMPOTENCY_CONFLICT')
     article = await load_owned_article(db, principal, request.article_id)
     if revision_fingerprint(article) != request.revision_fingerprint:

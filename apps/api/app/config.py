@@ -36,6 +36,9 @@ class Settings(BaseSettings):
     ai_timeout_ms: int = Field(30000, ge=1000, le=30000)
     ai_cache_ttl_days: int = Field(7, ge=1, le=7)
     ai_prompt_version: str = 'editorial-metadata-v1'
+    # Claim review returns quoted sentences, so it needs more output room than the metadata call.
+    ai_review_max_output_tokens: int = Field(1024, ge=1, le=1024)
+    ai_review_prompt_version: str = 'editorial-review-v1'
     mcp_enabled: bool = True
     mcp_api_key: SecretStr = SecretStr('')
     mcp_allowed_hosts: list[str] = ['127.0.0.1:8000', 'localhost:8000']

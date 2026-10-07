@@ -3,6 +3,7 @@ from datetime import datetime, timezone
 from uuid import UUID
 
 from sqlalchemy import Integer, select
+from sqlalchemy import delete as sa_delete
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.errors import AppError
@@ -111,11 +112,12 @@ async def list_drafts(db: AsyncSession, principal: Principal, *, limit: int | No
     if limit:
         stmt = stmt.limit(limit)
     articles = (await db.execute(stmt)).scalars().all()
-    out = []
-    for a in articles:
-        snapshot = await get_snapshot(db, a)
-        out.append(draft_dto(a, snapshot))
-    return out
+    snapshot_ids = [a.published_snapshot_id for a in articles if a.published_snapshot_id]
+    snapshots = {}
+    if snapshot_ids:
+        rows = (await db.execute(select(PublishedSnapshot).where(PublishedSnapshot.id.in_(snapshot_ids)))).scalars().all()
+        snapshots = {row.id: row for row in rows}
+    return [draft_dto(a, snapshots.get(a.published_snapshot_id)) for a in articles]
 
 
 async def create_draft(db: AsyncSession, principal: Principal, payload: ArticleCreate) -> ArticleDraft:
@@ -143,7 +145,7 @@ async def update_draft(db: AsyncSession, principal: Principal, article_id: UUID,
         raise AppError('ARTICLE_CHANGED')
     snapshot = await get_snapshot(db, article)
     if snapshot is not None and payload.slug and payload.slug != snapshot.slug:
-        raise AppError('PUBLISHED_SLUG_IMMUTABLE')
+        raise AppError('PUBLISHED_SLUG_IMMUTABLE', fields=[{'field': 'slug', 'message': 'Slug artikel yang pernah terbit tidak dapat diubah.'}])
     draft_data = payload.model_dump(mode='json', exclude={'revision'})
     article.slug = draft_data['slug'] or None
     article.draft = draft_data
@@ -162,38 +164,41 @@ async def delete_draft(db: AsyncSession, principal: Principal, article_id: UUID)
     article = await load_owned_article(db, principal, article_id)
     if article.published_snapshot_id is not None:
         raise AppError('ARTICLE_PUBLISHED')
+    # Snapshots left behind by earlier unpublishes would block the delete (RESTRICT FK).
+    await db.execute(sa_delete(PublishedSnapshot).where(PublishedSnapshot.article_id == article.id))
     await db.delete(article)
+    # Flush inside the request: the session commits after the response is sent, so a late failure would report success.
+    await db.flush()
 
 
-def _publish_errors(draft: dict, category_id, author_id, cover_media_id) -> bool:
+def publish_issues(draft: dict, category_id, author_id, cover_media_id) -> list[dict]:
+    """Every unmet publish requirement as `{field, message}`, in editor reading order."""
     title = draft.get('title') or ''
-    slug = draft.get('slug') or ''
     excerpt = draft.get('excerpt') or ''
     meta = draft.get('metaDescription') or ''
-    cover_alt = draft.get('coverAlt') or ''
-    body = draft.get('body') or []
-    words = meaningful_words(body_text(body))
-    checks = [
-        not (TITLE_MIN <= len(title) <= TITLE_MAX),
-        not slug,
-        words < BODY_MIN_WORDS,
-        not (EXCERPT_MIN <= len(excerpt) <= 240),
-        not (META_MIN <= len(meta) <= 160),
-        category_id is None,
-        author_id is None,
-        cover_media_id is None,
-        not cover_alt,
-        bool(draft.get('operationalClaims')) and not draft.get('informationCheckedAt'),
+    words = meaningful_words(body_text(draft.get('body') or []))
+    issues: list[tuple[str, bool, str]] = [
+        ('title', TITLE_MIN <= len(title) <= TITLE_MAX, f'Judul harus {TITLE_MIN}–{TITLE_MAX} karakter (saat ini {len(title)}).'),
+        ('slug', bool(draft.get('slug')), 'Slug wajib diisi.'),
+        ('categoryDocumentId', category_id is not None, 'Pilih kategori.'),
+        ('authorDocumentId', author_id is not None, 'Pilih penulis publik.'),
+        ('body', words >= BODY_MIN_WORDS, f'Isi artikel minimal {BODY_MIN_WORDS} kata bermakna (saat ini {words}).'),
+        ('excerpt', EXCERPT_MIN <= len(excerpt) <= 240, f'Ringkasan harus {EXCERPT_MIN}–240 karakter (saat ini {len(excerpt)}).'),
+        ('metaDescription', META_MIN <= len(meta) <= 160, f'Deskripsi SEO harus {META_MIN}–160 karakter (saat ini {len(meta)}).'),
+        ('coverMediaDocumentId', cover_media_id is not None, 'Pilih gambar sampul.'),
+        ('coverAlt', bool(draft.get('coverAlt')), 'Isi deskripsi alternatif gambar sampul.'),
+        ('informationCheckedAt', not draft.get('operationalClaims') or bool(draft.get('informationCheckedAt')), 'Artikel memuat klaim operasional; isi tanggal informasi diperiksa.'),
     ]
-    return any(checks)
+    return [{'field': field, 'message': message} for field, ok, message in issues if not ok]
 
 
 async def publish(db: AsyncSession, principal: Principal, article_id: UUID, revision: int) -> ArticleDraft:
     article = await load_owned_article(db, principal, article_id)
     if article.revision != revision:
         raise AppError('ARTICLE_CHANGED')
-    if _publish_errors(article.draft, article.category_id, article.author_id, article.cover_media_id):
-        raise AppError('PUBLISH_VALIDATION_FAILED')
+    issues = publish_issues(article.draft, article.category_id, article.author_id, article.cover_media_id)
+    if issues:
+        raise AppError('PUBLISH_VALIDATION_FAILED', fields=issues)
     data = dict(article.draft)
     moment = now()
     data['updatedAt'] = moment.isoformat()
@@ -226,8 +231,13 @@ async def unpublish(db: AsyncSession, principal: Principal, article_id: UUID, re
     article = await load_owned_article(db, principal, article_id)
     if article.revision != revision:
         raise AppError('ARTICLE_CHANGED')
+    old_snapshot_id = article.published_snapshot_id
     article.published_snapshot_id = None
     article.updated_at = now()
+    await db.flush()
+    if old_snapshot_id:
+        # Unpublished snapshots are dead data; their media references cascade with them.
+        await db.execute(sa_delete(PublishedSnapshot).where(PublishedSnapshot.id == old_snapshot_id))
     return draft_dto(article, None)
 
 
@@ -257,6 +267,7 @@ async def update_category(db: AsyncSession, category_id: UUID, payload: Category
     row = await get_category(db, category_id)
     row.slug = payload.slug
     row.data = {'name': payload.name, 'description': payload.description, 'order': payload.order}
+    await db.flush()
     return category_dto(row)
 
 
@@ -293,6 +304,7 @@ async def update_author(db: AsyncSession, author_id: UUID, payload: AuthorInput)
     row.slug = payload.slug
     row.avatar_media_id = payload.avatarMediaDocumentId
     row.data = {'name': payload.name, 'bio': payload.bio}
+    await db.flush()
     return author_dto(row)
 
 

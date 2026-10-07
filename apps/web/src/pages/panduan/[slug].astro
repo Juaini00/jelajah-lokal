@@ -1,11 +1,14 @@
 ---
 import SiteLayout from '../../layouts/SiteLayout.astro';
 import ArticleBody from '../../components/ArticleBody.astro';
+import ArticleCard from '../../components/ArticleCard.astro';
 import ContentImage from '../../components/ContentImage.astro';
 import ErrorState from '../../components/ErrorState.astro';
-import { article, ContentError } from '../../lib/server/api';
-import type { PublicArticleDetail } from '../../lib/server/contracts';
-import { displayDate, guideUrl, safeLink } from '../../lib/urls';
+import { outline } from '../../lib/article';
+import { article, articles, ContentError } from '../../lib/server/api';
+import { canonical } from '../../lib/server/seo';
+import type { PublicArticleCard, PublicArticleDetail } from '../../lib/server/contracts';
+import { displayDate, guideUrl, listingUrl, safeImage, safeLink } from '../../lib/urls';
 
 const { slug } = Astro.params;
 let data: PublicArticleDetail | undefined;
@@ -22,16 +25,50 @@ if (!slug) {
 }
 if (status !== 200) Astro.response.status = status;
 
+/* Related reading: same category first, topped up with the latest guides. Optional — a failure only hides the section. */
+let related: PublicArticleCard[] = [];
+if (data) {
+  const current = data;
+  const [sameCategory, latest] = await Promise.allSettled([articles({ category: current.category.slug, pageSize: 4 }), articles({ pageSize: 6 })]);
+  for (const result of [sameCategory, latest]) {
+    if (result.status !== 'fulfilled') continue;
+    for (const item of result.value.data) {
+      if (related.length < 3 && item.documentId !== current.documentId && !related.some(r => r.documentId === item.documentId)) related.push(item);
+    }
+  }
+}
+
+const sections = data ? outline(data.body) : [];
+const url = data ? canonical(guideUrl(data.slug)) : undefined;
+const coverImage = data ? safeImage(data.cover.url) : undefined;
+const updatedLater = data ? displayDate(data.updatedAt) !== displayDate(data.publishedAt) : false;
 const structuredData = data ? {
   '@context': 'https://schema.org',
-  '@type': 'Article',
-  headline: data.title,
-  description: data.metaDescription,
-  image: safeLink(data.cover.url) ? [data.cover.url] : undefined,
-  datePublished: data.publishedAt,
-  dateModified: data.updatedAt,
-  author: { '@type': 'Person', name: data.author.name },
-  publisher: { '@type': 'Organization', name: 'Jelajah Lokal' },
+  '@graph': [
+    {
+      '@type': 'Article',
+      headline: data.title,
+      description: data.metaDescription,
+      inLanguage: 'id-ID',
+      mainEntityOfPage: url,
+      articleSection: data.category.name,
+      keywords: data.tags.length ? data.tags.join(', ') : undefined,
+      image: coverImage ? [{ '@type': 'ImageObject', url: coverImage, width: data.cover.width, height: data.cover.height }] : undefined,
+      datePublished: data.publishedAt,
+      dateModified: data.updatedAt,
+      author: { '@type': 'Person', name: data.author.name },
+      publisher: { '@type': 'Organization', name: 'Jelajah Lokal' },
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Beranda', item: canonical('/') },
+        { '@type': 'ListItem', position: 2, name: 'Panduan', item: canonical('/panduan') },
+        { '@type': 'ListItem', position: 3, name: data.category.name, item: canonical(listingUrl(data.category.slug)) },
+        { '@type': 'ListItem', position: 4, name: data.title, item: url },
+      ],
+    },
+  ],
 } : undefined;
 const sourceUrl = data ? safeLink(data.imageSourceUrl) : undefined;
 const crumbTitle = data && data.title.length > 48 ? `${data.title.slice(0, 48)}…` : data?.title;
@@ -49,19 +86,26 @@ const crumbTitle = data && data.title.length > 48 ? `${data.title.slice(0, 48)}�
   noindex={status !== 200}
 >
   {status !== 200 ? <ErrorState status={status} /> : data && (
-    <article>
+    <>
+    <div class="read-progress" aria-hidden="true"></div>
+    <article class="article">
       <nav class="crumb" aria-label="Telusur">
         <a href="/">Beranda</a><span class="sep" aria-hidden="true">→</span>
         <a href="/panduan">Panduan</a><span class="sep" aria-hidden="true">→</span>
+        <a href={listingUrl(data.category.slug)}>{data.category.name}</a><span class="sep" aria-hidden="true">→</span>
         <span class="cur" aria-current="page">{crumbTitle}</span>
       </nav>
       <header class="art-head">
-        <div class="art-top"><span class="category">{data.category.name}</span>{data.regionLabel && <span class="sample">{data.regionLabel}</span>}</div>
+        <div class="art-top"><a class="category" href={listingUrl(data.category.slug)}>{data.category.name}</a>{data.regionLabel && <span class="sample">{data.regionLabel}</span>}</div>
         <h1>{data.title}</h1>
         <p class="dek">{data.excerpt}</p>
         <div class="byline">
           <div><span class="by-who">{data.author.name}</span><span class="by-role">Penulis &amp; penyunting</span></div>
-          <span class="by-date">{displayDate(data.publishedAt)} · {data.readingTimeMinutes} menit baca</span>
+          <div class="by-date">
+            <span><time datetime={data.publishedAt}>{displayDate(data.publishedAt)}</time> · {data.readingTimeMinutes} menit baca</span>
+            {updatedLater && <span class="by-updated">Diperbarui <time datetime={data.updatedAt}>{displayDate(data.updatedAt)}</time></span>}
+            {data.informationCheckedAt && <a class="checked" href="#sumber"><span aria-hidden="true">✓</span> Informasi diperiksa {displayDate(data.informationCheckedAt)}</a>}
+          </div>
         </div>
       </header>
       <figure class="hero">
@@ -71,13 +115,43 @@ const crumbTitle = data && data.title.length > 48 ? `${data.title.slice(0, 48)}�
           <span class="credit">{sourceUrl ? <>Foto: <a href={sourceUrl} rel="noopener noreferrer">{data.imageCredit}</a></> : <>Foto: {data.imageCredit}</>}</span>
         </figcaption>
       </figure>
-      <div class="read"><ArticleBody blocks={data.body} /></div>
-      <aside class="sources">
+
+      <div class="read">
+        <aside class="rail" aria-label="Navigasi artikel">
+          {sections.length > 1 && <nav class="toc" aria-labelledby="toc-title">
+            <span class="eyebrow" id="toc-title">Di artikel ini</span>
+            <ol>{sections.map(section => <li class={`toc-${section.level}`}><a href={`#${section.id}`}>{section.text}</a></li>)}</ol>
+          </nav>}
+          <div class="rail-facts">
+            <span class="eyebrow">Sekilas</span>
+            <dl>
+              <dt>Kategori</dt><dd>{data.category.name}</dd>
+              {data.regionLabel && <><dt>Wilayah</dt><dd>{data.regionLabel}</dd></>}
+              <dt>Waktu baca</dt><dd>{data.readingTimeMinutes} menit</dd>
+              <dt>Status info</dt><dd>{data.informationCheckedAt ? `Diperiksa ${displayDate(data.informationCheckedAt)}` : <a href="#sumber">Lihat catatan sumber</a>}</dd>
+            </dl>
+          </div>
+          <div class="share" data-share hidden>
+            <span class="eyebrow">Bagikan</span>
+            <div class="share-actions">
+              <button type="button" class="share-btn" data-copy={url}>Salin tautan</button>
+              <button type="button" class="share-btn" data-native hidden>Bagikan…</button>
+            </div>
+            <span class="share-status" role="status" aria-live="polite"></span>
+          </div>
+        </aside>
+        <div class="article-text">
+          <ArticleBody blocks={data.body} />
+          {data.tags.length > 0 && <div class="tags" aria-label="Topik"><span class="eyebrow">Topik</span><ul>{data.tags.map(tag => <li>{tag}</li>)}</ul></div>}
+        </div>
+      </div>
+
+      <aside class="sources" id="sumber">
         <span class="eyebrow">Sumber &amp; status</span>
         <h3>Dari mana panduan ini berasal</h3>
         <dl class="src-grid">
           <dt class="src-k">Status</dt>
-          <dd class="src-v"><span class="sample">{data.informationCheckedAt ? `Diperiksa ${displayDate(data.informationCheckedAt)}` : 'Belum ada tanggal pemeriksaan'}</span></dd>
+          <dd class="src-v"><span class:list={['sample', { 'sample-ok': data.informationCheckedAt }]}>{data.informationCheckedAt ? `Diperiksa ${displayDate(data.informationCheckedAt)}` : 'Belum ada tanggal pemeriksaan'}</span></dd>
           {data.sourceLinks.length > 0 && <>
             <dt class="src-k">Sumber</dt>
             <dd class="src-v"><ul>{data.sourceLinks.map(source => {
@@ -92,7 +166,49 @@ const crumbTitle = data && data.title.length > 48 ? `${data.title.slice(0, 48)}�
         </dl>
         <p class="caution"><b>Catatan.</b> Harga, rute, dan jam operasional dapat berubah. Periksa ulang ke sumbernya sebelum dijadikan acuan perjalanan.</p>
       </aside>
+
+      {related.length > 0 && <section class="related" aria-labelledby="related-title">
+        <div class="section-head"><div><span class="eyebrow">Bacaan berikutnya</span><h2 id="related-title">Lanjutkan menjelajah.</h2></div>{related.some(item => item.category.slug === data.category.slug) ? <a class="textlink" href={listingUrl(data.category.slug)}>Semua {data.category.name} <span aria-hidden="true">→</span></a> : <a class="textlink" href="/panduan">Semua panduan <span aria-hidden="true">→</span></a>}</div>
+        <div class="grid">{related.map(item => <ArticleCard article={item} />)}</div>
+      </section>}
+
       <nav class="back" aria-label="Kembali ke daftar"><a class="textlink" href="/panduan"><span aria-hidden="true">←</span> Kembali ke Panduan</a></nav>
     </article>
+    </>
   )}
 </SiteLayout>
+
+<script>
+  // Progressive enhancement: the article, ToC links and sources work without scripting.
+  const share = document.querySelector<HTMLElement>('[data-share]');
+  if (share) {
+    share.hidden = false;
+    const status = share.querySelector<HTMLElement>('.share-status');
+    const announce = (text: string) => { if (status) { status.textContent = text; window.setTimeout(() => { status.textContent = ''; }, 2500); } };
+    share.querySelector<HTMLButtonElement>('[data-copy]')?.addEventListener('click', async event => {
+      const url = (event.currentTarget as HTMLButtonElement).dataset.copy || location.href;
+      try { await navigator.clipboard.writeText(url); announce('Tautan disalin.'); } catch { announce('Tidak dapat menyalin — salin dari bilah alamat.'); }
+    });
+    const native = share.querySelector<HTMLButtonElement>('[data-native]');
+    if (native && 'share' in navigator) {
+      native.hidden = false;
+      native.addEventListener('click', () => { void navigator.share({ title: document.title, url: share.querySelector<HTMLElement>('[data-copy]')?.dataset.copy || location.href }).catch(() => undefined); });
+    }
+  }
+
+  // Highlight the section currently being read in the table of contents.
+  const links = new Map(Array.from(document.querySelectorAll<HTMLAnchorElement>('.toc a')).map(link => [decodeURIComponent(link.hash.slice(1)), link]));
+  if (links.size && 'IntersectionObserver' in window) {
+    const visible = new Set<string>();
+    const headings = Array.from(document.querySelectorAll<HTMLElement>('.article-text h2[id], .article-text h3[id]'));
+    const update = () => {
+      const current = headings.find(h => visible.has(h.id))?.id ?? headings.filter(h => h.getBoundingClientRect().top < 0).pop()?.id;
+      links.forEach((link, id) => { if (id === current) link.setAttribute('aria-current', 'true'); else link.removeAttribute('aria-current'); });
+    };
+    const observer = new IntersectionObserver(entries => {
+      for (const entry of entries) { if (entry.isIntersecting) visible.add(entry.target.id); else visible.delete(entry.target.id); }
+      update();
+    }, { rootMargin: '0px 0px -65% 0px' });
+    headings.forEach(heading => observer.observe(heading));
+  }
+</script>

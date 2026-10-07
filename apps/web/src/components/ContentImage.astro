@@ -13,7 +13,7 @@ const transformed = (width: number) => {
   return image.href;
 };
 const srcset = url?.includes('/image/upload/') ? widths.map(width => `${transformed(width)} ${width}w`).join(', ') : undefined;
-const sizes = variant === 'card' ? '(max-width: 600px) calc(100vw - 44px), (max-width: 900px) calc((100vw - 96px) / 2), (max-width: 1312px) calc((100vw - 128px) / 3), 395px' : variant === 'featured' ? '(max-width: 600px) calc(100vw - 44px), (max-width: 900px) 55vw, 772px' : variant === 'about' ? '(max-width: 600px) calc(100vw - 44px), (max-width: 1312px) calc(100vw - 64px), 1248px' : '(max-width: 600px) calc(100vw - 44px), (max-width: 1024px) calc(100vw - 64px), 960px';
+const sizes = variant === 'card' ? '(max-width: 600px) calc(100vw - 44px), (max-width: 900px) calc((100vw - 96px) / 2), (max-width: 1312px) calc((100vw - 128px) / 3), 395px' : variant === 'featured' ? '(max-width: 600px) calc(100vw - 44px), (max-width: 900px) 55vw, 772px' : variant === 'about' ? '(max-width: 600px) calc(100vw - 44px), (max-width: 1312px) calc(100vw - 64px), 1248px' : variant === 'body' ? '(max-width: 600px) calc(100vw - 44px), (max-width: 1024px) calc(100vw - 64px), 680px' : '(max-width: 600px) calc(100vw - 44px), (max-width: 1024px) calc(100vw - 64px), 960px';
 ---
 <div class:list={['media', `media-${variant}`, { 'media-invalid': !url }]}>
   <div class="media-fallback" aria-hidden={url ? 'true' : undefined}>

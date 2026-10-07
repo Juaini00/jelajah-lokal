@@ -1049,6 +1049,44 @@
         }
       }
     },
+    "/api/admin/editorial/review": {
+      "post": {
+        "summary": "Editorial Review",
+        "operationId": "editorial_review_api_admin_editorial_review_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GenerateInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReviewResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/admin/editorial/apply": {
       "post": {
         "summary": "Editorial Apply",
@@ -2224,6 +2262,40 @@
         ],
         "title": "Deleted"
       },
+      "EditorialReview": {
+        "properties": {
+          "summary": {
+            "type": "string",
+            "maxLength": 400,
+            "minLength": 1,
+            "title": "Summary"
+          },
+          "claims": {
+            "items": {
+              "$ref": "#/components/schemas/ReviewClaim"
+            },
+            "type": "array",
+            "maxItems": 6,
+            "title": "Claims"
+          },
+          "gaps": {
+            "items": {
+              "$ref": "#/components/schemas/ReviewGap"
+            },
+            "type": "array",
+            "maxItems": 4,
+            "title": "Gaps"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "summary",
+          "claims",
+          "gaps"
+        ],
+        "title": "EditorialReview"
+      },
       "GenerateInput": {
         "properties": {
           "articleDocumentId": {
@@ -3103,6 +3175,103 @@
           "children"
         ],
         "title": "Quote"
+      },
+      "ReviewClaim": {
+        "properties": {
+          "quote": {
+            "type": "string",
+            "maxLength": 300,
+            "minLength": 3,
+            "title": "Quote"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "harga",
+              "jadwal",
+              "kontak",
+              "lokasi",
+              "lainnya"
+            ],
+            "title": "Kind"
+          },
+          "note": {
+            "type": "string",
+            "maxLength": 240,
+            "minLength": 1,
+            "title": "Note"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "quote",
+          "kind",
+          "note"
+        ],
+        "title": "ReviewClaim"
+      },
+      "ReviewGap": {
+        "properties": {
+          "topic": {
+            "type": "string",
+            "maxLength": 80,
+            "minLength": 2,
+            "title": "Topic"
+          },
+          "suggestion": {
+            "type": "string",
+            "maxLength": 280,
+            "minLength": 1,
+            "title": "Suggestion"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "topic",
+          "suggestion"
+        ],
+        "title": "ReviewGap"
+      },
+      "ReviewResponse": {
+        "properties": {
+          "requestId": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Requestid"
+          },
+          "articleDocumentId": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Articledocumentid"
+          },
+          "revisionFingerprint": {
+            "type": "string",
+            "title": "Revisionfingerprint"
+          },
+          "result": {
+            "$ref": "#/components/schemas/EditorialReview"
+          },
+          "cacheHit": {
+            "type": "boolean",
+            "title": "Cachehit"
+          },
+          "quota": {
+            "$ref": "#/components/schemas/QuotaDTO"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "requestId",
+          "articleDocumentId",
+          "revisionFingerprint",
+          "result",
+          "cacheHit",
+          "quota"
+        ],
+        "title": "ReviewResponse"
       },
       "RevisionInput": {
         "properties": {

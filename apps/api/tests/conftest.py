@@ -48,6 +48,16 @@ async def db(engine):
         await session.rollback()
 
 
+@pytest_asyncio.fixture(autouse=True)
+async def _fresh_app_engine_pool():
+    # Services open their own short transactions on app.db.engine; each test runs on a new event loop,
+    # so pooled connections from a previous test must not be reused.
+    yield
+    from app.db import engine as app_engine
+
+    await app_engine.dispose()
+
+
 @pytest.fixture
 def admin_principal_factory():
     from app.models import Principal

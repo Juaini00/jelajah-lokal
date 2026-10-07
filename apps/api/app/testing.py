@@ -30,6 +30,18 @@ class FakeGeminiClient:
             'suggestedTags': list(FIXTURE_TAGS),
         }
 
+    def generate_review(self, text: str) -> dict:
+        # One claim quoted from the article and one invented sentence, so grounding is exercised.
+        quote = ' '.join(text.split()[:6])
+        return {
+            'summary': 'Artikel cukup lengkap; periksa klaim yang ditandai sebelum terbit.',
+            'claims': [
+                {'quote': quote, 'kind': 'lainnya', 'note': 'Pastikan pernyataan ini masih akurat.'},
+                {'quote': 'Tiket masuk Rp50.000 per orang.', 'kind': 'harga', 'note': 'Kalimat ini tidak ada di artikel.'},
+            ],
+            'gaps': [{'topic': 'Akses', 'suggestion': 'Tambahkan cara menuju lokasi.'}],
+        }
+
 
 def build_test_app() -> FastAPI:
     app = create_app()

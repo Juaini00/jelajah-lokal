@@ -6,7 +6,9 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from sqlalchemy import text
+from starlette.exceptions import HTTPException
 from starlette.staticfiles import StaticFiles
+from starlette.types import Scope
 
 from app.config import get_settings
 from app.db import engine
@@ -15,6 +17,21 @@ from app.mcp_server import build_mcp_app, mcp
 from app.routers import admin_auth, admin_content, admin_editorial, public
 
 ADMIN_DIST = Path(__file__).resolve().parents[2] / 'admin' / 'dist'
+
+
+class AdminStatic(StaticFiles):
+    """Admin SPA: client routes fall back to index.html; hashed build assets cache forever, the shell never."""
+
+    async def get_response(self, path: str, scope: Scope):
+        try:
+            response = await super().get_response(path, scope)
+        except HTTPException as exc:
+            if exc.status_code != 404 or '.' in path.rsplit('/', 1)[-1]:
+                raise
+            response = await super().get_response('index.html', scope)
+        immutable = path.startswith('assets/') and response.status_code == 200
+        response.headers['Cache-Control'] = 'public, max-age=31536000, immutable' if immutable else 'no-cache'
+        return response
 
 
 def create_app() -> FastAPI:
@@ -66,7 +83,7 @@ def create_app() -> FastAPI:
         return {'status': 'ok'}
 
     if ADMIN_DIST.is_dir():
-        app.mount('/admin', StaticFiles(directory=str(ADMIN_DIST), html=True), name='admin')
+        app.mount('/admin', AdminStatic(directory=str(ADMIN_DIST), html=True), name='admin')
 
     return app
 

@@ -1,109 +1,173 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
-import type { Session } from './types'
-import { ApiError, ErrorNotice, createApi } from './api'
-import { Articles } from './Articles'
-import { PeopleTaxonomy } from './PeopleTaxonomy'
-import { Media } from './Media'
-import { Assistant } from './Assistant'
-import './App.css'
+import { lazy, Suspense, useEffect, useState, useSyncExternalStore, type FormEvent } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
+import { Eye, EyeOff, FileText, Images, LogIn, LogOut, Menu, Sparkles, Tags, UserRound, WifiOff, X } from 'lucide-react'
+import { api, describeError, isApiError, login, sessionStore, useSession } from './lib/api'
+import { Link, mayLeave, navigate, useLocation } from './lib/router'
+import type { Session } from './lib/types'
+import { ArticlesList } from './pages/ArticlesList'
+import { useUsage } from './lib/queries'
+import { Dialog, FeedbackHost } from './ui/feedback'
+import { EmptyState, Skeleton, Spinner } from './ui/controls'
 
-type Tab = 'articles' | 'categories' | 'authors' | 'media' | 'assistant'
-const tabs: { id: Tab; label: string }[] = [
-  { id: 'articles', label: 'Artikel' },
-  { id: 'categories', label: 'Kategori' },
-  { id: 'authors', label: 'Penulis' },
-  { id: 'media', label: 'Media' },
-  { id: 'assistant', label: 'Editorial Assistant' },
+// The editor (TipTap/ProseMirror) and secondary pages load on demand; the editor chunk is warmed when idle.
+const loadEditor = () => import('./pages/ArticleEditor')
+const ArticleEditorPage = lazy(() => loadEditor().then(m => ({ default: m.ArticleEditorPage })))
+const Assistant = lazy(() => import('./pages/Assistant').then(m => ({ default: m.Assistant })))
+const MediaLibrary = lazy(() => import('./pages/MediaLibrary').then(m => ({ default: m.MediaLibrary })))
+const Taxonomy = lazy(() => import('./pages/Taxonomy').then(m => ({ default: m.Taxonomy })))
+
+const nav = [
+  { group: 'Konten', items: [{ to: '/articles', label: 'Artikel', icon: FileText }, { to: '/media', label: 'Media', icon: Images }] },
+  { group: 'Taksonomi', items: [{ to: '/categories', label: 'Kategori', icon: Tags }, { to: '/authors', label: 'Penulis', icon: UserRound }] },
+  { group: 'Bantuan AI', items: [{ to: '/assistant', label: 'Editorial Assistant', icon: Sparkles }] },
 ]
 
-function Login({ onLoggedIn }: { onLoggedIn: (session: Session) => void }) {
-  const [username, setUsername] = useState('')
+function useOnline() {
+  return useSyncExternalStore(listener => {
+    window.addEventListener('online', listener); window.addEventListener('offline', listener)
+    return () => { window.removeEventListener('online', listener); window.removeEventListener('offline', listener) }
+  }, () => navigator.onLine)
+}
+
+function LoginForm({ presetUsername = '', onDone }: { presetUsername?: string; onDone?: (session: Session) => void }) {
+  const [username, setUsername] = useState(presetUsername)
   const [password, setPassword] = useState('')
+  const [reveal, setReveal] = useState(false)
+  const [capsLock, setCapsLock] = useState(false)
   const [pending, setPending] = useState(false)
-  const [error, setError] = useState<unknown>(null)
-  async function submit(e: React.FormEvent) {
-    e.preventDefault()
-    setPending(true); setError(null)
+  const [error, setError] = useState('')
+
+  async function submit(event: FormEvent) {
+    event.preventDefault()
+    if (!username.trim() || !password) { setError('Isi nama pengguna dan kata sandi.'); return }
+    setPending(true); setError('')
     try {
-      const response = await fetch('/api/admin/login', {
-        method: 'POST', credentials: 'same-origin', cache: 'no-store',
-        headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username, password }),
-      })
-      const payload: { data: Session; error?: { code: string; message: string; requestId: string; retryable: boolean } } | null = await response.json().catch(() => null)
-      if (!response.ok || !payload) throw new ApiError(response.status, payload?.error?.code || 'SERVICE_ERROR', payload?.error?.message || 'Masuk gagal.', payload?.error?.requestId, payload?.error?.retryable)
-      onLoggedIn(payload.data)
-    } catch (e) { setError(e) } finally { setPending(false) }
+      // Not `onDone?.(await login())`: optional calls skip evaluating their arguments when onDone is absent.
+      const session = await login(username.trim(), password)
+      onDone?.(session)
+    }
+    catch (failure) {
+      setError(isApiError(failure, 'AUTH_REQUIRED') ? 'Nama pengguna atau kata sandi salah.' : describeError(failure).title)
+      setPassword('')
+    } finally { setPending(false) }
   }
+
+  return <form className="stack" onSubmit={e => void submit(e)} noValidate>
+    <div className="field">
+      <div className="field-label"><label htmlFor="login-username">Nama pengguna</label></div>
+      <input id="login-username" value={username} onChange={e => setUsername(e.target.value)} autoComplete="username" autoFocus={!presetUsername} disabled={pending} aria-invalid={!!error} />
+    </div>
+    <div className="field">
+      <div className="field-label"><label htmlFor="login-password">Kata sandi</label></div>
+      <div className="input-group">
+        <input id="login-password" type={reveal ? 'text' : 'password'} value={password} onChange={e => setPassword(e.target.value)} autoComplete="current-password" autoFocus={!!presetUsername} disabled={pending} aria-invalid={!!error}
+          onKeyUp={e => setCapsLock(e.getModifierState('CapsLock'))} />
+        <button type="button" className="icon-button" aria-label={reveal ? 'Sembunyikan kata sandi' : 'Tampilkan kata sandi'} onClick={() => setReveal(r => !r)}>{reveal ? <EyeOff size={16} /> : <Eye size={16} />}</button>
+      </div>
+      {capsLock && <p className="field-hint warn">Caps Lock aktif.</p>}
+    </div>
+    {error && <p className="field-error" role="alert">{error}</p>}
+    <button type="submit" className="btn btn-primary btn-block" disabled={pending}>{pending ? <><Spinner />Memeriksa…</> : <><LogIn size={16} />Masuk</>}</button>
+  </form>
+}
+
+function LoginScreen() {
   return <div className="login-screen">
-    <form className="login-card" onSubmit={e => void submit(e)}>
-      <h1>Jelajah Lokal</h1>
-      <p>Masuk ke admin editorial untuk mengelola artikel, media, dan Editorial Assistant.</p>
-      <fieldset disabled={pending}>
-        <label>Nama pengguna<input autoFocus required value={username} onChange={e => setUsername(e.target.value)} autoComplete="username" /></label>
-        <label>Kata sandi<input required type="password" value={password} onChange={e => setPassword(e.target.value)} autoComplete="current-password" /></label>
-        <button type="submit" disabled={pending}>{pending ? 'Memeriksa…' : 'Masuk'}</button>
-      </fieldset>
-      <ErrorNotice error={error} />
-    </form>
+    <div className="login-card">
+      <div className="brand-mark large">JL</div>
+      <h1>Masuk ke Jelajah Lokal</h1>
+      <p>Ruang editorial untuk menulis dan menerbitkan panduan perjalanan.</p>
+      <LoginForm />
+    </div>
+  </div>
+}
+
+function Page({ path }: { path: string }) {
+  const [, section, id] = path.split('/')
+  useEffect(() => {
+    const titles: Record<string, string> = { articles: id ? 'Edit artikel' : 'Artikel', media: 'Media', categories: 'Kategori', authors: 'Penulis', assistant: 'Editorial Assistant' }
+    document.title = `${titles[section] ?? 'Admin'} · Jelajah Lokal`
+  }, [section, id])
+  useEffect(() => { if (!section) void navigate('/articles', { replace: true, force: true }) }, [section])
+
+  if (section === 'articles') return id ? <ArticleEditorPage id={id} /> : <ArticlesList />
+  if (section === 'media') return <MediaLibrary />
+  if (section === 'categories') return <Taxonomy kind="categories" />
+  if (section === 'authors') return <Taxonomy kind="authors" />
+  if (section === 'assistant') return <Assistant />
+  if (!section) return null
+  return <div className="page"><EmptyState icon={<X size={28} />} title="Halaman tidak ditemukan" action={<Link to="/articles" className="btn btn-primary">Ke daftar artikel</Link>} /></div>
+}
+
+function Shell({ session }: { session: Session }) {
+  const client = useQueryClient()
+  const { path } = useLocation()
+  const online = useOnline()
+  const { expired } = useSession()
+  const usage = useUsage()
+  const [navOpen, setNavOpen] = useState(false)
+  useEffect(() => {
+    const timer = window.setTimeout(() => void loadEditor(), 1500)
+    return () => window.clearTimeout(timer)
+  }, [])
+
+  async function logout() {
+    if (!await mayLeave()) return
+    try { await api.post('/logout') } catch { /* the session ends locally either way */ }
+    sessionStore.signedOut()
+    client.clear()
+  }
+
+  return <div className="shell">
+    <a href="#main" className="skip-link">Langsung ke konten</a>
+    <aside className={`sidebar ${navOpen ? 'open' : ''}`}>
+      <div className="brand"><span className="brand-mark">JL</span><span><strong>Jelajah Lokal</strong><small>Editorial</small></span></div>
+      <nav aria-label="Navigasi utama">
+        {nav.map(group => <div key={group.group} className="nav-group">
+          <span className="nav-group-label">{group.group}</span>
+          {group.items.map(item => {
+            const active = path === item.to || path.startsWith(`${item.to}/`)
+            const Icon = item.icon
+            return <Link key={item.to} to={item.to} onClick={() => setNavOpen(false)} className={`nav-link ${active ? 'active' : ''}`} aria-current={active ? 'page' : undefined}>
+              <Icon size={18} />{item.label}
+              {item.to === '/assistant' && usage.data && <span className="nav-badge" title="Sisa proses AI hari ini">{usage.data.enabled ? `${usage.data.remaining}/${usage.data.limit}` : 'off'}</span>}
+            </Link>
+          })}
+        </div>)}
+      </nav>
+      <div className="sidebar-footer">
+        <span className="avatar avatar-fallback">{session.principal.username.slice(0, 1).toUpperCase()}</span>
+        <span className="who"><strong>{session.principal.username}</strong><small>{session.principal.role === 'admin' ? 'Administrator' : 'Editor'}</small></span>
+        <button type="button" className="icon-button" aria-label="Keluar" title="Keluar" onClick={() => void logout()}><LogOut size={18} /></button>
+      </div>
+    </aside>
+    {navOpen && <div className="sidebar-scrim" onClick={() => setNavOpen(false)} />}
+    <div className="main">
+      <header className="mobile-bar">
+        <button type="button" className="icon-button" aria-label="Buka navigasi" onClick={() => setNavOpen(true)}><Menu size={20} /></button>
+        <span className="brand"><span className="brand-mark">JL</span><strong>Jelajah Lokal</strong></span>
+      </header>
+      {!online && <div className="offline-bar" role="status"><WifiOff size={16} />Anda sedang offline. Perubahan tetap tersimpan di perangkat ini sampai Anda bisa menyimpan lagi.</div>}
+      <main id="main" tabIndex={-1}><Suspense fallback={<div className="page"><Skeleton rows={6} /></div>}><Page path={path} /></Suspense></main>
+    </div>
+    <Dialog open={expired} onClose={() => undefined} dismissible={false} size="sm" title="Sesi berakhir" description="Masuk kembali untuk melanjutkan. Isian di halaman ini tetap utuh.">
+      <LoginForm presetUsername={session.principal.username} onDone={() => void client.invalidateQueries()} />
+    </Dialog>
   </div>
 }
 
 export default function App() {
-  const [session, setSession] = useState<Session | null>(null)
-  const [checking, setChecking] = useState(true)
-  const [expiredNotice, setExpiredNotice] = useState(false)
-  const [tab, setTab] = useState<Tab>('articles')
-  const [openArticleId, setOpenArticleId] = useState<string | null>(null)
-  const [articlesDirty, setArticlesDirty] = useState(false)
-  const sessionRef = useRef<Session | null>(null)
-  sessionRef.current = session
-
-  const api = useRef(createApi(() => sessionRef.current?.csrfToken, () => { setSession(null); setExpiredNotice(true) })).current
-
+  const { session, checked } = useSession()
   useEffect(() => {
     let active = true
-    fetch('/api/admin/session', { credentials: 'same-origin', cache: 'no-store' })
-      .then(async r => { const payload: { data: Session } | null = await r.json().catch(() => null); return r.ok ? (payload?.data ?? null) : null })
-      .then(data => { if (active) setSession(data) })
-      .catch(() => { if (active) setSession(null) })
-      .finally(() => { if (active) setChecking(false) })
+    api.get<{ data: Session }>('/session')
+      .then(r => { if (active) sessionStore.signedIn(r.data) })
+      .catch(() => { if (active) sessionStore.signedOut() })
     return () => { active = false }
   }, [])
 
-  const logout = useCallback(async () => {
-    try { await api('/logout', { method: 'POST' }) } catch { /* session treated as ended locally regardless of network outcome */ }
-    setSession(null)
-  }, [api])
-
-  function switchTab(next: Tab) {
-    if (tab === 'articles' && next !== 'articles' && articlesDirty && !window.confirm('Artikel memiliki perubahan belum disimpan. Pindah halaman dan buang perubahan?')) return
-    setTab(next)
-  }
-
-  if (checking) return <div className="login-screen"><p role="status">Memeriksa sesi…</p></div>
-  if (!session) return <>
-    {expiredNotice && <p className="notice error" role="alert">Sesi berakhir. Masuk kembali untuk melanjutkan.</p>}
-    <Login onLoggedIn={s => { setSession(s); setExpiredNotice(false) }} />
+  return <>
+    {!checked ? <div className="login-screen"><Spinner size={24} /></div> : session ? <Shell session={session} /> : <LoginScreen />}
+    <FeedbackHost />
   </>
-
-  return <div className="admin-shell">
-    <aside className="admin-nav">
-      <div className="brand">Jelajah Lokal<span>Admin</span></div>
-      <nav aria-label="Navigasi admin">
-        {tabs.map(t => <button key={t.id} className={`nav-item ${tab === t.id ? 'active' : ''}`} onClick={() => switchTab(t.id)} aria-current={tab === t.id ? 'page' : undefined}>{t.label}</button>)}
-      </nav>
-      <div className="nav-footer">
-        <strong>{session.principal.username}</strong>
-        <small>{session.principal.role === 'admin' ? 'Administrator' : 'Editor'}</small>
-        <button className="secondary" onClick={() => void logout()}>Keluar</button>
-      </div>
-    </aside>
-    <main className="admin-main">
-      {tab === 'articles' && <Articles api={api} openId={openArticleId} onOpened={() => setOpenArticleId(null)} onDirty={setArticlesDirty} />}
-      {tab === 'categories' && <PeopleTaxonomy api={api} kind="categories" />}
-      {tab === 'authors' && <PeopleTaxonomy api={api} kind="authors" />}
-      {tab === 'media' && <Media api={api} />}
-      {tab === 'assistant' && <Assistant api={api} />}
-    </main>
-  </div>
 }
