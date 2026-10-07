@@ -24,15 +24,18 @@ const sizes = variant === 'card' ? '(max-width: 600px) calc(100vw - 44px), (max-
 </div>
 <script>
   // Progressive enhancement only: native alt text and the reserved fallback
-  // surface remain available when scripting is disabled.
-  for (const image of document.querySelectorAll<HTMLImageElement>('.media img')) {
-    const failed = () => {
-      image.hidden = true;
-      image.parentElement?.classList.add('media-invalid');
-      const fallback = image.parentElement?.querySelector('.media-fallback');
-      fallback?.removeAttribute('aria-hidden');
-    };
-    image.addEventListener('error', failed, { once: true });
-    if (image.complete && image.naturalWidth === 0) failed();
-  }
+  // surface remain available when scripting is disabled. Runs on every client-side
+  // navigation (astro:page-load), not just the first document load.
+  document.addEventListener('astro:page-load', () => {
+    for (const image of document.querySelectorAll<HTMLImageElement>('.media img')) {
+      const failed = () => {
+        image.hidden = true;
+        image.parentElement?.classList.add('media-invalid');
+        const fallback = image.parentElement?.querySelector('.media-fallback');
+        fallback?.removeAttribute('aria-hidden');
+      };
+      image.addEventListener('error', failed, { once: true });
+      if (image.complete && image.naturalWidth === 0) failed();
+    }
+  });
 </script>

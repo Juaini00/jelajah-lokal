@@ -180,35 +180,42 @@ const crumbTitle = data && data.title.length > 48 ? `${data.title.slice(0, 48)}�
 
 <script>
   // Progressive enhancement: the article, ToC links and sources work without scripting.
-  const share = document.querySelector<HTMLElement>('[data-share]');
-  if (share) {
-    share.hidden = false;
-    const status = share.querySelector<HTMLElement>('.share-status');
-    const announce = (text: string) => { if (status) { status.textContent = text; window.setTimeout(() => { status.textContent = ''; }, 2500); } };
-    share.querySelector<HTMLButtonElement>('[data-copy]')?.addEventListener('click', async event => {
-      const url = (event.currentTarget as HTMLButtonElement).dataset.copy || location.href;
-      try { await navigator.clipboard.writeText(url); announce('Tautan disalin.'); } catch { announce('Tidak dapat menyalin — salin dari bilah alamat.'); }
-    });
-    const native = share.querySelector<HTMLButtonElement>('[data-native]');
-    if (native && 'share' in navigator) {
-      native.hidden = false;
-      native.addEventListener('click', () => { void navigator.share({ title: document.title, url: share.querySelector<HTMLElement>('[data-copy]')?.dataset.copy || location.href }).catch(() => undefined); });
-    }
-  }
+  // With the ClientRouter this module runs once, so wire up on every astro:page-load and
+  // tear the observer down before the next swap.
+  let observer: IntersectionObserver | null = null;
 
-  // Highlight the section currently being read in the table of contents.
-  const links = new Map(Array.from(document.querySelectorAll<HTMLAnchorElement>('.toc a')).map(link => [decodeURIComponent(link.hash.slice(1)), link]));
-  if (links.size && 'IntersectionObserver' in window) {
+  document.addEventListener('astro:page-load', () => {
+    const share = document.querySelector<HTMLElement>('[data-share]');
+    if (share) {
+      share.hidden = false;
+      const status = share.querySelector<HTMLElement>('.share-status');
+      const announce = (text: string) => { if (status) { status.textContent = text; window.setTimeout(() => { status.textContent = ''; }, 2500); } };
+      share.querySelector<HTMLButtonElement>('[data-copy]')?.addEventListener('click', async event => {
+        const url = (event.currentTarget as HTMLButtonElement).dataset.copy || location.href;
+        try { await navigator.clipboard.writeText(url); announce('Tautan disalin.'); } catch { announce('Tidak dapat menyalin — salin dari bilah alamat.'); }
+      });
+      const native = share.querySelector<HTMLButtonElement>('[data-native]');
+      if (native && 'share' in navigator) {
+        native.hidden = false;
+        native.addEventListener('click', () => { void navigator.share({ title: document.title, url: share.querySelector<HTMLElement>('[data-copy]')?.dataset.copy || location.href }).catch(() => undefined); });
+      }
+    }
+
+    // Highlight the section currently being read in the table of contents.
+    const links = new Map(Array.from(document.querySelectorAll<HTMLAnchorElement>('.toc a')).map(link => [decodeURIComponent(link.hash.slice(1)), link]));
+    if (!links.size || !('IntersectionObserver' in window)) return;
     const visible = new Set<string>();
     const headings = Array.from(document.querySelectorAll<HTMLElement>('.article-text h2[id], .article-text h3[id]'));
     const update = () => {
       const current = headings.find(h => visible.has(h.id))?.id ?? headings.filter(h => h.getBoundingClientRect().top < 0).pop()?.id;
       links.forEach((link, id) => { if (id === current) link.setAttribute('aria-current', 'true'); else link.removeAttribute('aria-current'); });
     };
-    const observer = new IntersectionObserver(entries => {
+    observer = new IntersectionObserver(entries => {
       for (const entry of entries) { if (entry.isIntersecting) visible.add(entry.target.id); else visible.delete(entry.target.id); }
       update();
     }, { rootMargin: '0px 0px -65% 0px' });
-    headings.forEach(heading => observer.observe(heading));
-  }
+    headings.forEach(heading => observer?.observe(heading));
+  });
+
+  document.addEventListener('astro:before-swap', () => { observer?.disconnect(); observer = null; });
 </script>

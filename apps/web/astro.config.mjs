@@ -10,5 +10,7 @@ export default defineConfig({
   output: 'server',
   adapter: onVercel ? vercel() : node({ mode: 'standalone' }),
   trailingSlash: 'never',
+  // Fetch the next page on hover/focus so ClientRouter swaps feel instant (pages are SSR, no-store).
+  prefetch: { prefetchAll: true, defaultStrategy: 'hover' },
   server: { host: '127.0.0.1', port: 4321 },
 });
